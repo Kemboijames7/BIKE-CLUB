@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bike Club — Rides & Events</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+      <link href="https://fonts.googleapis.com/css?family=Source+Serif+Pro:400,600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="fonts/icomoon/style.css">
+    <style>
+        .hero { background: linear-gradient(135deg, #1e293b, #2563eb); color: white; padding: 80px 0; }
+        .event-card { transition: transform 0.2s; cursor: pointer; }
+        .event-card:hover { transform: translateY(-4px); }
+        .badge-type { text-transform: uppercase; font-size: 0.7rem; }
+    </style>
+     <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <%- include('partials/nav') %>
+    <main class="flex-grow-1">
+    <!-- Hero -->
+    <div class="hero text-center">
+        <div class="container">
+            <h1 class="display-4 fw-bold">Ride Together 🚴</h1>
+            <p class="lead">Join Nairobi's most active cycling community</p>
+            <% if (typeof token !== 'undefined' && token) { %>
+    <a href="/dashboard" class="btn btn-light btn-lg me-2">My Dashboard</a>
+<% } else { %>
+    <a href="/register" class="btn btn-light btn-lg me-2">Join Now</a>
+<% } %>
+<a href="#events" class="btn btn-outline-light btn-lg">View Events</a>
+        </div>
+    </div>
+
+    <!-- Filter tabs -->
+    <div class="container mt-4" id="events">
+        <div class="d-flex gap-2 mb-4 flex-wrap">
+            <% ['all', 'ride', 'campaign', 'webinar', 'race', 'social'].forEach(type => { %>
+            <a href="/?type=<%= type %>"
+               class="btn btn-<%= currentType === type ? 'primary' : 'outline-secondary' %> btn-sm">
+                <%= type.charAt(0).toUpperCase() + type.slice(1) %>
+            </a>
+            <% }) %>
+        </div>
+
+        <!-- Events grid -->
+        <div class="row g-4">
+            <% if (events.length === 0) { %>
+                <div class="col-12 text-center text-muted py-5">
+                    <h4>No events found</h4>
+                    <p>Check back soon for upcoming rides!</p>
+                </div>
+            <% } %>
+            <% events.forEach(event => { %>
+            <div class="col-md-4">
+                <div class="card event-card h-100 shadow-sm"
+                     onclick="window.location='/events/<%= event._id %>'">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="badge bg-primary badge-type"><%= event.type %></span>
+                            <span class="badge bg-<%= event.status === 'upcoming' ? 'success' : 'secondary' %>">
+                                <%= event.status %>
+                            </span>
+                        </div>
+                        <h5 class="card-title"><%= event.title %></h5>
+                        <p class="card-text text-muted small">
+                            <%= event.description.substring(0, 100) %>...
+                        </p>
+                        <hr>
+                        <div class="d-flex justify-content-between text-muted small">
+                            <span>📍 <%= event.location %></span>
+                            <span>👥 <%= event.registered %>/<%= event.capacity %></span>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2">
+                            <span class="text-muted small">
+                                📅 <%= new Date(event.date).toDateString() %>
+                            </span>
+                            <strong class="text-primary">
+                                <%= event.price === 0 ? 'FREE' : `KES ${event.price}` %>
+                            </strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <% }) %>
+        </div>
+
+        <!-- Pagination -->
+        <% if (pagination.pages > 1) { %>
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                <% for (let i = 1; i <= pagination.pages; i++) { %>
+                <li class="page-item <%= pagination.page === i ? 'active' : '' %>">
+                    <a class="page-link" href="/?page=<%= i %>&type=<%= currentType %>">
+                        <%= i %>
+                    </a>
+                </li>
+                <% } %>
+            </ul>
+        </nav>
+        <% } %>
+    </div>
+</main>
+    <%- include('partials/footer') %>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

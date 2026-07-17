@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Payments — Bike Club Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container-fluid p-4">
+    <div class="d-flex justify-content-between mb-4">
+        <h3>💳 Payments</h3>
+        <a href="/admin/dashboard?token=<%= token %>" class="btn btn-outline-secondary">
+            ← Dashboard
+        </a>
+    </div>
+
+    <!-- Summary cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card p-3 border-success">
+                <div class="text-muted small">Completed</div>
+                <div class="fs-3 fw-bold text-success">
+                    <%= payments.filter(p => p.status === 'completed').length %>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3 border-warning">
+                <div class="text-muted small">Pending</div>
+                <div class="fs-3 fw-bold text-warning">
+                    <%= payments.filter(p => p.status === 'pending').length %>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3 border-danger">
+                <div class="text-muted small">Failed</div>
+                <div class="fs-3 fw-bold text-danger">
+                    <%= payments.filter(p => p.status === 'failed').length %>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3 border-primary">
+                <div class="text-muted small">Total Revenue</div>
+                <div class="fs-3 fw-bold text-primary">
+                    KES <%= payments
+                        .filter(p => p.status === 'completed')
+                        .reduce((sum, p) => sum + p.amount, 0) %>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payments table -->
+    <div class="card">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Payment ID</th>
+                        <th>Member</th>
+                        <th>Event</th>
+                        <th>Amount</th>
+                        <th>Method</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% payments.forEach(payment => { %>
+                    <tr>
+                        <td><small><%= payment._id %></small></td>
+                        <td><small><%= payment.memberId %></small></td>
+                        <td><small><%= payment.eventId %></small></td>
+                        <td><strong><%= payment.currency %> <%= payment.amount %></strong></td>
+                        <td>
+                            <span class="badge bg-info">
+                                <%= payment.method %>
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-<%=
+                                payment.status === 'completed' ? 'success' :
+                                payment.status === 'pending' ? 'warning' :
+                                payment.status === 'failed' ? 'danger' : 'secondary'
+                            %>">
+                                <%= payment.status %>
+                            </span>
+                        </td>
+                        <td><%= new Date(payment.createdAt).toDateString() %></td>
+                    </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

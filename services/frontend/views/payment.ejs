@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Payment — Bike Club</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <%- include('partials/nav') %>
+    <main class="flex-grow-1">
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+
+            <h3 class="mb-4">Complete Payment</h3>
+
+            <% if (error) { %>
+            <div class="alert alert-danger"><%= error %></div>
+            <% } %>
+
+            <!-- Event summary card -->
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="badge bg-primary mb-2"><%= event.type %></span>
+                            <h5 class="mb-1"><%= event.title %></h5>
+                            <div class="text-muted small">
+                                <div>📍 <%= event.location %></div>
+                                <div>📅 <%= new Date(event.date).toDateString() %></div>
+                                <div>👥 <%= event.capacity - event.registered %> spots left</div>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <div class="text-muted small">Total</div>
+                            <div class="fs-4 fw-bold text-primary">KES <%= event.price %></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment method tabs -->
+            <ul class="nav nav-tabs mb-4" id="paymentTabs">
+                <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="tab"
+                            data-bs-target="#stripeTab">
+                        💳 Card Payment
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab"
+                            data-bs-target="#mpesaTab">
+                        📱 MPesa
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+
+                <!-- Stripe tab -->
+                <div class="tab-pane fade show active" id="stripeTab">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <h6 class="mb-3">Enter Card Details</h6>
+                            <div id="card-element"
+                                 class="form-control p-3 mb-3"
+                                 style="height:45px">
+                            </div>
+                            <div id="card-errors" class="text-danger small mb-3"></div>
+                            <form id="stripeForm" method="POST"
+                                  action="/events/<%= event._id %>/pay/stripe">
+                                <input type="hidden" name="amount" value="<%= event.price %>">
+                                <input type="hidden" name="paymentMethodId" id="paymentMethodId">
+                                <button type="submit" id="stripeBtn"
+                                        class="btn btn-primary w-100 btn-lg">
+                                    Pay KES <%= event.price %>
+                                </button>
+                            </form>
+                            <div class="text-center text-muted small mt-3">
+                                🔒 Secured by Stripe
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MPesa tab -->
+                <div class="tab-pane fade" id="mpesaTab">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <h6 class="mb-3">MPesa Payment</h6>
+                            <div class="alert alert-info small">
+                                📱 You will receive an STK push on your phone.
+                                Enter your MPesa PIN to complete payment.
+                            </div>
+                            <form method="POST"
+                                  action="/events/<%= event._id %>/pay/mpesa">
+                                <input type="hidden" name="amount" value="<%= event.price %>">
+                                <div class="mb-3">
+                                    <label class="form-label">Safaricom Number</label>
+                                    <input type="tel" name="phone"
+                                           class="form-control form-control-lg"
+                                           placeholder="07XXXXXXXX" required>
+                                    <div class="form-text">
+                                        Format: 07XXXXXXXX or 254XXXXXXXXX
+                                    </div>
+                                </div>
+                                <button type="submit"
+                                        class="btn btn-success w-100 btn-lg">
+                                    Pay KES <%= event.price %> via MPesa
+                                </button>
+                            </form>
+                            <div class="text-center text-muted small mt-3">
+                                🔒 Secured by Safaricom
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <a href="/events/<%= event._id %>"
+               class="btn btn-outline-secondary w-100 mt-3">
+                ← Back to Event
+            </a>
+
+        </div>
+    </div>
+</div>
+
+</main>
+  <%- include('partials/footer') %>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Stripe JS -->
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+    const stripe = Stripe('<%= stripeKey %>');
+    const elements = stripe.elements();
+
+    const cardElement = elements.create('card', {
+        style: {
+            base: {
+                fontSize: '16px',
+                color: '#424770',
+                fontFamily: 'Poppins, sans-serif',
+                '::placeholder': { color: '#aab7c4' }
+            },
+            invalid: { color: '#dc3545' }
+        }
+    });
+
+    cardElement.mount('#card-element');
+
+    cardElement.on('change', (event) => {
+        const errors = document.getElementById('card-errors');
+        errors.textContent = event.error ? event.error.message : '';
+    });
+
+    document.getElementById('stripeForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const btn = document.getElementById('stripeBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+
+        const { paymentMethod, error } = await stripe.createPaymentMethod({
+            type: 'card',
+            card: cardElement
+        });
+
+        if (error) {
+            document.getElementById('card-errors').textContent = error.message;
+            btn.disabled = false;
+            btn.textContent = 'Pay KES <%= event.price %>';
+            return;
+        }
+
+        document.getElementById('paymentMethodId').value = paymentMethod.id;
+        e.target.submit();
+    });
+</script>
+</body>
+</html>

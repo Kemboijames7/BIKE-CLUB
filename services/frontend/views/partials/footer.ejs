@@ -1,0 +1,95 @@
+<footer class="footer-39201">
+  <div class="container">
+    <div class="row">
+      
+      <!-- Brand -->
+      <div class="col-md mb-4 mb-md-0">
+        <h3>🚴 Bike Club Nairobi</h3>
+         <p class="mb-4"><strong>Ride Together, Grow Together. A community of cyclists across Nairobi.</strong></p>
+      </div>
+
+      <!-- Explore / Auth Links -->
+      <div class="col-md mb-4 mb-md-0">
+        <h3>Explore</h3>
+         <ul class="list-unstyled nav-links">
+          <li><a href="/">Events</a></li>
+          <li><a href="/members">Members</a></li>
+          <% if (typeof token !== 'undefined' && token) { %>
+          <li><a href="/dashboard">Dashboard</a></li>
+          <li><a href="/vouchers">Vouchers</a></li>
+          <li><a href="/profile">Profile</a></li>
+          <li><a href="/terms">Terms of Use</a></li>
+          <li><a href="/contact">Contact</a></li>
+          <% } else { %>
+          <li><a href="/login">Login</a></li>
+          <li><a href="/register">Join the Club</a></li>
+          <% } %>
+        </ul>
+      </div>
+
+   
+
+      <!-- Follow Us -->
+      <div class="col-md-4 mb-4 mb-md-0">
+        <h3>Follow Us</h3>
+        <ul class="social list-unstyled">
+          <li><a href="#"><span class="icon-facebook">Facebook</span></a></li>
+          <li><a href="#"><span class="icon-instagram">Instagram</span></a></li>
+          <li><a href="#"><span class="icon-x">X.com</span></a></li>
+          <li><a href="#"><span class="icon-youtube">YouTube</span></a></li>
+        </ul>
+                    <h3>Subscribe</h3>
+            <p class="mb-4">Get Involved
+on our latest trends, features and news by subscribing to our newsletter.</p>
+            <form action="#" id="footerNewsletterForm" class="subscribe">
+                <input type="email" id="footerEmail" class="form-control"
+               placeholder="Enter your e-mail" required>
+                <input type="submit" class="btn btn-submit" value="Send">
+              </form>
+               <div id="footerNewsletterMsg" class="small mt-2"></div>
+      </div>
+
+<div class="row align-items-center border-top mt-4 pt-3">
+  <div class="col-12 text-center">
+    <p class="mb-0" style="font-size:0.8rem; color:#0f0e0e; line-height:1; max-height:20px; overflow:hidden;">
+      🚴 Bike Club Nairobi © <%= new Date().getFullYear() %> — Ride Together, Grow Together
+    </p>
+  </div>
+</div>
+  </div>
+</footer>
+<script>
+document.getElementById('footerNewsletterForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const email = document.getElementById('footerEmail').value;
+    const msg = document.getElementById('footerNewsletterMsg');
+    const btn = e.target.querySelector('input[type="submit"]');
+
+    btn.disabled = true;
+    btn.value = 'Subscribing...';
+
+    try {
+        const res = await fetch('/api/newsletter/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            msg.innerHTML = `<span class="text-success">✅ ${data.message}</span>`;
+            document.getElementById('footerEmail').value = '';
+        } else {
+            msg.innerHTML = `<span class="text-danger">❌ ${data.error}</span>`;
+        }
+
+    } catch {
+        msg.innerHTML = '<span class="text-danger">❌ Network error. Try again.</span>';
+    } finally {
+        btn.disabled = false;
+        btn.value = 'Send';
+    }
+});
+</script>

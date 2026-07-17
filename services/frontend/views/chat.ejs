@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Live Chat — <%= event.title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        #messages {
+            height: 400px;
+            overflow-y: auto;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+        }
+        .message { margin-bottom: 12px; }
+        .message .sender { font-weight: bold; font-size: 0.85rem; color: #2563eb; }
+        .message .time { font-size: 0.75rem; color: #94a3b8; margin-left: 8px; }
+        .message .content { margin-top: 2px; }
+        .message.admin .sender { color: #16a34a; }
+        .typing { font-size: 0.8rem; color: #94a3b8; min-height: 20px; }
+    </style>
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <%- include('partials/nav') %>
+    <main class="flex-grow-1">
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-8 mx-auto">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h4><%= event.title %></h4>
+                        <span class="badge bg-success" id="status">Connecting...</span>
+                        <span class="badge bg-secondary ms-1" id="online">0 online</span>
+                    </div>
+                    <a href="/events/<%= eventId %>" class="btn btn-outline-secondary btn-sm">
+                        ← Back to Event
+                    </a>
+                </div>
+
+                <div id="messages"></div>
+                <div class="typing mt-1" id="typing"></div>
+
+                <div class="input-group mt-3">
+                    <input type="text" id="msgInput" class="form-control"
+                           placeholder="Type a message..." autocomplete="off">
+                    <button class="btn btn-primary" onclick="sendMessage()">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script>
+        const TOKEN = '<%= token %>';
+        const ROOM_ID = 'event_<%= eventId %>';
+        const ROOM_TYPE = '<%= event.hasCommentary ? "commentary" : event.type === "webinar" ? "webinar" : "live" %>';
+
+        const socket = io('http://localhost:4006', {
+            auth: { token: TOKEN },
+            transports: ['websocket', 'polling']
+        });
+
+        socket.on('connect', () => {
+            document.getElementById('status').textContent = '● Live';
+            document.getElementById('status').className = 'badge bg-success';
+            socket.emit('join_room', { roomId: ROOM_ID, roomType: ROOM_TYPE });
+        });
+
+        socket.on('disconnect', () => {
+            document.getElementById('status').textContent = '● Offline';
+            document.getElementById('status').className = 'badge bg-danger';
+        });
+
+        socket.on('message_history', (messages) => {
+            messages.forEach(addMessage);
+            scrollToBottom();
+        });
+
+        socket.on('new_message', (msg) => {
+            addMessage(msg);
+            scrollToBottom();
+        });
+
+        socket.on('user_joined', (data) => {
+            document.getElementById('online').textContent = `${data.onlineCount} online`;
+            addSystem(`${data.user.email} joined`);
+        });
+
+        socket.on('user_left', (data) => {
+            document.getElementById('online').textContent = `${data.onlineCount} online`;
+            addSystem(`${data.email} left`);
+        });
+
+        socket.on('user_typing', (data) => {
+            document.getElementById('typing').textContent = `${data.email} is typing...`;
+        });
+
+        socket.on('user_stop_typing', () => {
+            document.getElementById('typing').textContent = '';
+        });
+
+        socket.on('kicked', (data) => {
+            alert(data.message);
+            window.location.href = '/';
+        });
+
+        function addMessage(msg) {
+            const div = document.getElementById('messages');
+            const isAdmin = msg.sender.role === 'admin';
+            div.innerHTML += `
+                <div class="message ${isAdmin ? 'admin' : ''}">
+                    <span class="sender">${msg.sender.email}</span>
+                    <span class="time">${new Date(msg.timestamp).toLocaleTimeString()}</span>
+                    <div class="content">${msg.content}</div>
+                </div>`;
+        }
+
+        function addSystem(text) {
+            const div = document.getElementById('messages');
+            div.innerHTML += `
+                <div class="text-center text-muted small my-1">— ${text} —</div>`;
+        }
+
+        function scrollToBottom() {
+            const div = document.getElementById('messages');
+            div.scrollTop = div.scrollHeight;
+        }
+
+        let typingTimer;
+        document.getElementById('msgInput').addEventListener('input', () => {
+            socket.emit('typing', { roomId: ROOM_ID });
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(() => {
+                socket.emit('stop_typing', { roomId: ROOM_ID });
+            }, 1000);
+        });
+
+        document.getElementById('msgInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        function sendMessage() {
+            const input = document.getElementById('msgInput');
+            const content = input.value.trim();
+            if (!content) return;
+            socket.emit('send_message', { content, roomId: ROOM_ID });
+            input.value = '';
+        }
+    </script>
+    <%- include('partials/footer') %>
+</body>
+</html>

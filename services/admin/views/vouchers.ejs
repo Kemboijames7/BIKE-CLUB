@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vouchers — Bike Club Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container-fluid p-4">
+    <div class="d-flex justify-content-between mb-4">
+        <h3>🎟️ Vouchers</h3>
+        <a href="/admin/dashboard?token=<%= token %>" class="btn btn-outline-secondary">
+            ← Dashboard
+        </a>
+    </div>
+    <div class="card">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Code</th>
+                        <th>Member</th>
+                        <th>Event</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Expires</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% vouchers.forEach(voucher => { %>
+                    <tr>
+                        <td><strong><%= voucher.code %></strong></td>
+                        <td><small><%= voucher.memberId %></small></td>
+                        <td><small><%= voucher.eventId %></small></td>
+                        <td><%= voucher.currency %> <%= voucher.amount %></td>
+                        <td>
+                            <span class="badge bg-<%=
+                                voucher.status === 'active' ? 'success' :
+                                 voucher.status === 'revoked' ? 'danger'    :
+                                voucher.status === 'expired' ? 'warning'   : 'secondary'
+                            %>">
+                                <%= voucher.status %>
+                            </span>
+                        </td>
+                        <td><%= new Date(voucher.expiresAt).toDateString() %></td>
+                       <td>
+    <% if (voucher.status === 'active') { %>
+    <div class="dropdown">
+        <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                type="button" data-bs-toggle="dropdown">
+            Actions
+        </button>
+        <ul class="dropdown-menu">
+            <li>
+                <form method="POST"
+                      action="/admin/vouchers/<%= voucher.code %>/revoke?token=<%= token %>">
+                    <button class="dropdown-item text-danger"
+                            onclick="return confirm('Revoke this voucher?')">
+                        🚫 Revoke
+                    </button>
+                </form>
+            </li>
+            <li>
+                <form method="POST"
+                      action="/admin/vouchers/<%= voucher.code %>/expire?token=<%= token %>">
+                    <button class="dropdown-item text-warning"
+                            onclick="return confirm('Mark as expired?')">
+                        ⏰ Expire
+                    </button>
+                </form>
+            </li>
+        </ul>
+    </div>
+
+    <% } else if (voucher.status === 'revoked') { %>
+    <div class="dropdown">
+        <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                type="button" data-bs-toggle="dropdown">
+            Actions
+        </button>
+        <ul class="dropdown-menu">
+            <li>
+                <form method="POST"
+                      action="/admin/vouchers/<%= voucher.code %>/reinstate?token=<%= token %>">
+                    <button class="dropdown-item text-success"
+                            onclick="return confirm('Reinstate this voucher?')">
+                        ✅ Reinstate
+                    </button>
+                </form>
+            </li>
+        </ul>
+    </div>
+
+    <% } else if (voucher.status === 'expired') { %>
+    <div class="dropdown">
+        <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                type="button" data-bs-toggle="dropdown">
+            Actions
+        </button>
+        <ul class="dropdown-menu">
+            <li>
+                <form method="POST"
+                      action="/admin/vouchers/<%= voucher.code %>/reinstate?token=<%= token %>">
+                    <button class="dropdown-item text-success"
+                            onclick="return confirm('Reinstate this expired voucher?')">
+                        ✅ Reinstate
+                    </button>
+                </form>
+            </li>
+        </ul>
+    </div>
+
+    <% } else { %>
+        <span class="text-muted small">—</span>
+    <% } %>
+</td>
+                    </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

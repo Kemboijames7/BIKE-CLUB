@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>My Dashboard — Bike Club</title>
+     <link rel="stylesheet" href="/css/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+      <link href="https://fonts.googleapis.com/css?family=Source+Serif+Pro:400,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="fonts/icomoon/style.css">
+    <style>
+        body { background: #f0f2f5; }
+        .page-header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            padding: 2rem 0 3rem;
+            margin-bottom: -2rem;
+        }
+        .card { border: none; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); }
+        .card-hover { transition: transform 0.2s, box-shadow 0.2s; }
+        .card-hover:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+        .voucher-row { border-radius: 8px; border: 1px solid #e9ecef; transition: background 0.2s; }
+        .voucher-row:hover { background: #f8f9fa; }
+        .event-card { border-radius: 10px; border: 1px solid #e9ecef; transition: all 0.2s; }
+        .event-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+        .stat-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+    /* ── Mobile responsive ───────────────────── */
+@media (max-width: 768px) {
+    .page-header {
+        padding: 1.5rem 0 2.5rem;
+    }
+
+    .page-header h3 {
+        font-size: 1.3rem;
+    }
+
+    /* Stack cols full width on mobile */
+    .col-md-4, .col-md-8 {
+        width: 100%;
+    }
+
+    /* Smaller avatar */
+    .stat-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+    }
+
+    /* Event cards full width on mobile */
+    .col-md-6 {
+        width: 100%;
+    }
+
+    /* Tighter card padding on small screens */
+    .card-body.p-4 {
+        padding: 1rem !important;
+    }
+
+    /* Voucher code smaller on mobile */
+    .font-monospace {
+        font-size: 0.85rem;
+    }
+
+    /* Nav already handles collapse via Bootstrap */
+}
+
+@media (max-width: 480px) {
+    .page-header h3 {
+        font-size: 1.1rem;
+    }
+
+    .container {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    /* Stack voucher row on very small screens */
+    .voucher-row {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.5rem;
+    }
+
+    .voucher-row .badge {
+        align-self: flex-start;
+    }
+}
+    </style>
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <%- include('partials/nav') %>
+    <main class="flex-grow-1">
+
+    <!-- Page header -->
+    <div class="page-header">
+        <div class="container">
+            <% if (typeof success !== 'undefined' && success) { %>
+            <div class="alert alert-success alert-dismissible fade show" role="alert" id="successAlert">
+                ✓ <%= success %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <% } %>
+            <h3 class="fw-bold mb-0">
+                Welcome back, <%= member.name || member.email?.split('@')[0] || 'Cyclist' %> 👋
+            </h3>
+            <p class="mb-0 mt-1" style="color: rgba(255,255,255,0.6);">
+                Here's what's happening in your club
+            </p>
+        </div>
+    </div>
+
+    <div class="container pb-5" style="max-width: 1100px;">
+        <div class="row g-4">
+
+            <!-- LEFT COL — Profile + Stats -->
+            <div class="col-md-4">
+
+                <!-- Profile card -->
+                <div class="card mb-4">
+                    <div class="card-body text-center p-4">
+                        <% if (member.avatar) { %>
+                            <img src="<%= member.avatar %>"
+                                 class="rounded-circle mb-3"
+                                 width="80" height="80"
+                                 style="object-fit:cover; border: 3px solid #4fc3f7;">
+                        <% } else { %>
+                            <div style="width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg,#1a1a2e,#4fc3f7); display:flex; align-items:center; justify-content:center; font-size:2rem; margin: 0 auto 1rem;">
+                                🚴
+                            </div>
+                        <% } %>
+
+                        <h5 class="fw-bold mb-0">
+                            <%= member.name || member.email?.split('@')[0] || 'Cyclist' %>
+                        </h5>
+                        <div class="text-muted small mb-2">
+                            📍 <%= member.city || 'City not set' %>
+                        </div>
+                        <span class="badge rounded-pill bg-<%= member.membershipStatus === 'active' ? 'success' : 'warning' %>">
+                            <%= member.membershipStatus %>
+                        </span>
+
+                        <hr class="my-3">
+
+                        <p class="text-muted small fst-italic mb-3">
+                            <% if (member.bio && member.bio.trim()) { %>
+                                "<%= member.bio.trim().substring(0, 80) %><%= member.bio.trim().length > 80 ? '...' : '' %>"
+                            <% } else { %>
+                                <span class="text-secondary">No bio yet</span>
+                            <% } %>
+                        </p>
+
+                        <div class="d-flex justify-content-between text-muted small mb-3 px-2">
+                            <span>🚲 <%= member.bikeType || '—' %></span>
+                            <span>📅 <%= new Date(member.joinedAt).toLocaleDateString() %></span>
+                        </div>
+
+                        <a href="/profile" class="btn btn-outline-primary btn-sm w-100">
+                            ✏️ Edit Profile
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick stats -->
+                <div class="card">
+                    <div class="card-body p-4">
+                        <h6 class="text-muted fw-semibold mb-3 text-uppercase" style="font-size:0.75rem; letter-spacing:0.05em;">
+                            Quick Stats
+                        </h6>
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="stat-icon" style="background:#e8f5e9;">🎟️</div>
+                            <div>
+                                <div class="fw-bold"><%= vouchers.length %></div>
+                                <div class="text-muted small">Total Vouchers</div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="stat-icon" style="background:#e3f2fd;">✅</div>
+                            <div>
+                                <div class="fw-bold">
+                                    <%= vouchers.filter(v => v.status === 'active').length %>
+                                </div>
+                                <div class="text-muted small">Active Vouchers</div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="stat-icon" style="background:#fce4ec;">🗓️</div>
+                            <div>
+                                <div class="fw-bold"><%= events.length %></div>
+                                <div class="text-muted small">Upcoming Events</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT COL — Vouchers + Events -->
+            <div class="col-md-8">
+
+                <!-- Vouchers card -->
+                <div class="card mb-4">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold mb-0">🎟️ My Vouchers</h6>
+                            <a href="/vouchers" class="btn btn-sm btn-outline-primary">
+                                View All →
+                            </a>
+                        </div>
+
+                        <% if (vouchers.length === 0) { %>
+                        <div class="text-center text-muted py-4">
+                            <div class="fs-1 mb-2">🎟️</div>
+                            <p class="mb-2">No vouchers yet</p>
+                            <a href="/" class="btn btn-primary btn-sm">Browse Events</a>
+                        </div>
+                        <% } else { %>
+                            <% vouchers.slice(0, 3).forEach(voucher => { %>
+                            <div class="voucher-row d-flex justify-content-between align-items-center p-3 mb-2">
+                                <div>
+                                    <div class="fw-bold font-monospace" style="letter-spacing:0.1em; color:#1a1a2e;">
+                                        <%= voucher.code %>
+                                    </div>
+                                    <div class="text-muted small">
+                                        Expires: <%= voucher.expiresAt ? new Date(voucher.expiresAt).toDateString() : '—' %>
+                                    </div>
+                                </div>
+                                <span class="badge rounded-pill bg-<%=
+                                    voucher.status === 'active'  ? 'success'   :
+                                    voucher.status === 'used'    ? 'secondary' :
+                                    voucher.status === 'expired' ? 'warning'   : 'danger'
+                                %>">
+                                    <%= voucher.status %>
+                                </span>
+                            </div>
+                            <% }) %>
+                            <% if (vouchers.length > 3) { %>
+                            <div class="text-center mt-2">
+                                <a href="/vouchers" class="text-primary small">
+                                    +<%= vouchers.length - 3 %> more vouchers →
+                                </a>
+                            </div>
+                            <% } %>
+                        <% } %>
+                    </div>
+                </div>
+
+                <!-- Events card -->
+                <div class="card">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold mb-0">🗓️ Upcoming Events</h6>
+                            <a href="/" class="btn btn-sm btn-outline-primary">View All →</a>
+                        </div>
+
+                        <% if (events.length === 0) { %>
+                        <div class="text-center text-muted py-4">
+                            <div class="fs-1 mb-2">🗓️</div>
+                            <p>No upcoming events</p>
+                        </div>
+                        <% } else { %>
+                        <div class="row g-3">
+                            <% events.forEach(event => { %>
+                            <div class="col-md-6">
+                                <div class="event-card p-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="badge bg-secondary rounded-pill"><%= event.type %></span>
+                                        <span class="fw-bold" style="color:#1a1a2e;">
+                                            <%= event.price === 0 ? 'FREE' : `KES ${event.price}` %>
+                                        </span>
+                                    </div>
+                                    <h6 class="fw-semibold mb-2"><%= event.title %></h6>
+                                    <div class="text-muted small mb-3">
+                                        <div>📍 <%= event.location %></div>
+                                        <div>📅 <%= new Date(event.date).toDateString() %></div>
+                                        <div>👥 <%= event.registered %>/<%= event.capacity %> registered</div>
+                                    </div>
+                                    <a href="/events/<%= event._id %>"
+                                       class="btn btn-sm w-100"
+                                       style="background:#1a1a2e; color:white;">
+                                        View Event →
+                                    </a>
+                                </div>
+                            </div>
+                            <% }) %>
+                        </div>
+                        <% } %>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</main>
+  <%- include('partials/footer') %>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">
+        </script>
+        <script>
+            const successAlert = document.getElementById('successAlert');
+    if (successAlert) {
+        setTimeout(() => {
+            const alertInstance = bootstrap.Alert.getOrCreateInstance(successAlert);
+            alertInstance.close(); // uses Bootstrap's built-in fade-out
+        }, 4000); 
+    }
+    </script>
+</body>
+</html>

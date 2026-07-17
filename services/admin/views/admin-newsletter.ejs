@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newsletter Management - Bike Club</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container mt-4">
+        <h2>Newsletter Management</h2>
+        
+        <!-- Pass data through data attributes -->
+        <div id="newsletterData" 
+             data-count="<%= count %>" 
+             data-count-json='<%= countJson %>'>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Create Newsletter Campaign</h4>
+                    </div>
+                    <div class="card-body">
+                        <form id="newsletterForm">
+                            <div class="mb-3">
+                                <label>Subject</label>
+                                <input type="text" id="subject" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label>Content (HTML supported)</label>
+                                <textarea id="content" rows="10" class="form-control" required></textarea>
+                                <small class="text-muted">You can use HTML tags for formatting</small>
+                            </div>
+                            <div class="mb-3">
+                                <label>Test Email (optional)</label>
+                                <input type="email" id="testEmail" class="form-control" placeholder="Send a test email first">
+                            </div>
+                            <button type="submit" class="btn btn-primary" id="sendBtn">
+                                Send to <span id="subscriberCount"><%= count %></span> Subscribers
+                            </button>
+                        </form>
+                        <div id="result" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Subscribers (<span id="subscriberCountDisplay"><%= count %></span>)</h4>
+                    </div>
+                    <div class="card-body" style="max-height: 500px; overflow-y: auto">
+                        <% if (subscribers.length === 0) { %>
+                            <p class="text-muted">No subscribers yet</p>
+                        <% } else { %>
+                            <ul class="list-group">
+                                <% subscribers.forEach(sub => { %>
+                                <li class="list-group-item">
+                                    <strong><%= sub.email %></strong><br>
+                                    <small><%= sub.name || 'No name' %></small><br>
+                                    <small class="text-muted">Joined: <%= new Date(sub.subscribedAt).toDateString() %></small>
+                                </li>
+                                <% }) %>
+                            </ul>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Read data from HTML attributes instead of EJS
+        const dataDiv = document.getElementById('newsletterData');
+        const subscriberCount = parseInt(dataDiv.dataset.count) || 0;
+        
+        const sendBtn = document.getElementById('sendBtn');
+        const newsletterForm = document.getElementById('newsletterForm');
+        const resultDiv = document.getElementById('result');
+        
+        newsletterForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const subject = document.getElementById('subject').value;
+            const content = document.getElementById('content').value;
+            const testEmail = document.getElementById('testEmail').value;
+            
+            if (!subject || !content) {
+                resultDiv.innerHTML = '<div class="alert alert-warning">Please fill in subject and content</div>';
+                return;
+            }
+            
+            sendBtn.disabled = true;
+            const originalText = sendBtn.textContent;
+            sendBtn.textContent = 'Sending...';
+            
+            try {
+                const response = await fetch('/admin/newsletter/send', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ subject, content, testEmail })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                    if (!testEmail) {
+                        document.getElementById('subject').value = '';
+                        document.getElementById('content').value = '';
+                    }
+                } else {
+                    resultDiv.innerHTML = `<div class="alert alert-danger">${data.error || 'Failed to send newsletter'}</div>`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = '<div class="alert alert-danger">Network error. Please try again.</div>';
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.textContent = originalText;
+            }
+        });
+    </script>
+</body>
+</html>

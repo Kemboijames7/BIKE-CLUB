@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title><%= event.title %> — Bike Club</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <%- include('partials/nav') %>
+    <main class="flex-grow-1">
+
+    <div class="container mt-4">
+        <% if (typeof error !== 'undefined' && error) { %>
+        <div class="alert alert-danger"><%= error %></div>
+        <% } %>
+
+        <div class="row">
+            <!-- Event details -->
+            <div class="col-md-8">
+                <div class="mb-3">
+                    <span class="badge bg-primary me-2"><%= event.type %></span>
+                    <span class="badge bg-<%= event.status === 'upcoming' ? 'success' : 'secondary' %>">
+                        <%= event.status %>
+                    </span>
+                </div>
+                <h1><%= event.title %></h1>
+                <p class="lead text-muted"><%= event.description %></p>
+                <hr>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="fs-4">📍</span>
+                            <div>
+                                <div class="text-muted small">Location</div>
+                                <strong><%= event.location %></strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="fs-4">📅</span>
+                            <div>
+                                <div class="text-muted small">Date</div>
+                                <strong><%= new Date(event.date).toDateString() %></strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="fs-4">👥</span>
+                            <div>
+                                <div class="text-muted small">Capacity</div>
+                                <strong><%= event.registered %>/<%= event.capacity %> registered</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="fs-4">💬</span>
+                            <div>
+                                <div class="text-muted small">Features</div>
+                                <strong>
+                                    <%= event.hasLiveChat ? 'Live Chat' : '' %>
+                                    <%= event.hasCommentary ? '• Commentary' : '' %>
+                                </strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <% if (event.hasLiveChat) { %>
+                <a href="/events/<%= event._id %>/chat"
+                   class="btn btn-outline-primary mt-4">
+                    💬 Join Live Chat
+                </a>
+                <% } %>
+            </div>
+
+            <!-- Purchase card -->
+            <div class="col-md-4">
+                <div class="card shadow sticky-top" style="top:20px">
+                    <div class="card-body p-4">
+                        <div class="text-center mb-3">
+                            <div class="fs-1 fw-bold text-primary">
+                                <%= event.price === 0 ? 'FREE' : `KES ${event.price}` %>
+                            </div>
+                            <div class="text-muted">per person</div>
+                        </div>
+
+                        <% if (event.registered >= event.capacity) { %>
+                        <div class="alert alert-warning text-center">
+                            Event is fully booked
+                        </div>
+                        <% } else if (event.status === 'cancelled') { %>
+                        <div class="alert alert-danger text-center">
+                            Event cancelled
+                        </div>
+                        <% } else if (typeof token !== 'undefined' && token) { %>
+                             <% if (event.price === 0) { %>
+                        <form method="POST" action="/events/<%= event._id %>/purchase">
+                            <input type="hidden" name="amount" value="0">
+                            <button type="submit" class="btn btn-primary w-100 btn-lg">
+                               🎟️ Get Free Voucher
+                            </button>
+                        </form>
+                        <% } else { %>
+                        <a href="/events/<%= event._id %>/pay" class="btn btn-primary w-100 btn-lg">
+                            💳 Buy Voucher — KES <%= event.price %>
+                        </a>
+                  <% } %>
+
+    <div class="text-center text-muted small mt-2">
+        <%= event.capacity - event.registered %> spots remaining
+    </div>
+                  <% } else { %>
+    <a href="/login" class="btn btn-primary w-100 btn-lg">
+        Login to Purchase
+    </a>
+    <div class="text-center text-muted small mt-2">
+        You need an account to buy vouchers
+    </div>
+<% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<%- include('partials/footer') %>
+</body>
+</html>

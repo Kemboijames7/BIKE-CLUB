@@ -1,0 +1,57 @@
+<!-- views/partials/newsletter-signup.ejs -->
+<div class="newsletter-section bg-light p-4 rounded mt-4">
+    <h3>Stay Updated with Bike Club News</h3>
+    <p>Subscribe to our newsletter for event updates, cycling tips, and exclusive offers!</p>
+    
+    <form id="newsletterForm" class="row g-3">
+        <div class="col-md-6">
+            <input type="email" id="newsletterEmail" class="form-control" 
+                   placeholder="Your email address" required>
+        </div>
+        <div class="col-md-4">
+            <input type="text" id="newsletterName" class="form-control" 
+                   placeholder="Your name (optional)">
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Subscribe</button>
+        </div>
+    </form>
+    <div id="newsletterMessage" class="mt-2"></div>
+</div>
+
+<script>
+document.getElementById('newsletterForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const email = document.getElementById('newsletterEmail').value;
+    const name = document.getElementById('newsletterName').value;
+    const messageDiv = document.getElementById('newsletterMessage');
+    
+    // Disable button during request
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Subscribing...';
+    
+    try {
+        const response = await fetch('/api/newsletter/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, name })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            messageDiv.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+            document.getElementById('newsletterForm').reset();
+        } else {
+            messageDiv.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+        }
+    } catch (error) {
+        messageDiv.innerHTML = `<div class="alert alert-danger">Network error. Please try again.</div>`;
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Subscribe';
+    }
+});
+</script>

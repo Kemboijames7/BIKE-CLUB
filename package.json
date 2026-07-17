@@ -1,0 +1,48 @@
+{
+  "name": "bike-club",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "frontend": "nodemon services/frontend/index.js",
+    "gateway": "nodemon gateway/gateway.js",
+    "auth": "nodemon services/auth/index.js",
+    "members": "nodemon services/members/index.js",
+    "events": "nodemon services/events/index.js",
+    "vouchers": "nodemon services/vouchers/index.js",
+    "chat": "nodemon services/chat/index.js",
+    "payments": "nodemon services/payments/index.js",
+    "admin": "nodemon services/admin/index.js",
+    "notifications": "nodemon services/notifications/index.js",
+    "newsletter": "node services/newsletter/index.js",
+    "newsletter-worker": "node services/newsletter/worker.js",
+    "dev": "concurrently -n \"frontend,gateway,auth,members,events,vouchers,chat,payments,admin,notifications,newsletter,newsletter-worker\" -c \"blue,white,cyan,magenta,yellow,green,gray,red,orange,pink\" \"npm run frontend\" \"npm run gateway\" \"npm run auth\" \"npm run members\" \"npm run events\" \"npm run vouchers\" \"npm run chat\" \"npm run payments\" \"npm run admin\" \"npm run notifications\" \"npm run newsletter\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "axios": "^1.15.0",
+    "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^17.4.2",
+    "ejs": "^5.0.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.3.2",
+    "http-proxy": "^1.18.1",
+    "ioredis": "^5.10.1",
+    "joi": "^18.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.4.1",
+    "morgan": "^1.10.1",
+    "nodemailer": "^8.0.5",
+    "nodemon": "^3.1.14",
+    "redis": "^5.12.1",
+    "socket.io": "^4.8.3",
+    "stripe": "^22.0.2"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

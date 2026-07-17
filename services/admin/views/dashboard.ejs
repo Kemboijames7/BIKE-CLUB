@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard --Bike Club Admin</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+     <style>
+        .sidebar { min-height: 100vh; background: #1e293b; }
+        .sidebar a { color: #94a3b8; text-decoration: none; display: block; padding: 10px 20px; }
+        .sidebar a:hover { color: white; background: #334155; }
+        .stat-card { border-left: 4px solid; }
+        .stat-card.blue { border-color: #2563eb; }
+        .stat-card.green { border-color: #16a34a; }
+        .stat-card.orange { border-color: #ea580c; }
+        .stat-card.purple { border-color: #7c3aed; }
+        .service-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    </style>
+</head>
+<body>
+ <div class="d-flex">
+
+    <!-- Sidebar -->
+    <div class="sidebar col-md-2 p-0">
+        <div class="p-3 text-white">
+            <h5>🚴 Bike Club</h5>
+            <small class="text-secondary">Admin Panel</small>
+        </div>
+        <hr class="border-secondary m-0">
+        <a href="/admin/dashboard?token=<%= token %>">📊 Dashboard</a>
+        <a href="/admin/members?token=<%= token %>">👥 Members</a>
+        <a href="/admin/events?token=<%= token %>">🗓️ Events</a>
+        <a href="/admin/vouchers?token=<%= token %>">🎟️ Vouchers</a>
+        <a href="/admin/payments?token=<%= token %>">💳 Payments</a>
+        <a href="/admin/newsletter?token=<%= token %>">📧 Newsletter</a>
+        <hr class="border-secondary">
+        <a href="/admin/login" class="text-danger">🚪 Logout</a>
+    </div>
+
+    <!-- Main content -->
+    <div class="col-md-10 p-4">
+        <div class="d-flex justify-content-between mb-4">
+            <h3>Dashboard</h3>
+            <span class="text-muted">Welcome, <%= user.email %></span>
+        </div>
+
+        <!-- Stats cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card stat-card blue p-3">
+                    <div class="text-muted small">Total Members</div>
+                    <div class="fs-2 fw-bold"><%= stats.members.total %></div>
+                    <div class="small text-success"><%= stats.members.active %> active</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card green p-3">
+                    <div class="text-muted small">Total Events</div>
+                    <div class="fs-2 fw-bold"><%= stats.events.total %></div>
+                    <div class="small text-primary"><%= stats.events.upcoming %> upcoming</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card orange p-3">
+                    <div class="text-muted small">Total Vouchers</div>
+                    <div class="fs-2 fw-bold"><%= stats.vouchers.total %></div>
+                    <div class="small text-warning"><%= stats.vouchers.active %> active</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card purple p-3">
+                    <div class="text-muted small">Total Revenue</div>
+                    <div class="fs-2 fw-bold">KES <%= stats.payments.revenue %></div>
+                    <div class="small text-success"><%= stats.payments.completed %> payments</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System health -->
+        <div class="card mb-4">
+            <div class="card-header"><strong>System Health</strong></div>
+            <div class="card-body">
+                <div class="row">
+                    <% Object.entries(stats.system.services).forEach(([name, healthy]) => { %>
+                    <div class="col-md-3 mb-2">
+                        <span class="service-dot bg-<%= healthy ? 'success' : 'danger' %>"></span>
+                        <span class="ms-2"><%= name %></span>
+                        <span class="badge bg-<%= healthy ? 'success' : 'danger' %> ms-1">
+                            <%= healthy ? 'UP' : 'DOWN' %>
+                        </span>
+                    </div>
+                    <% }) %>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-md-3">
+                        <small class="text-muted">Redis Memory</small>
+                        <div><strong><%= stats.system.redisMemory %></strong></div>
+                    </div>
+                    <div class="col-md-3">
+                        <small class="text-muted">Notification Queue</small>
+                        <div><strong><%= stats.system.notificationQueue %> pending</strong></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent events -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between">
+                <strong>Recent Events</strong>
+                <a href="/admin/events?token=<%= token %>" class="btn btn-sm btn-primary">
+                    View All
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Title</th>
+                            <th>Type</th>
+                            <th>Date</th>
+                            <th>Capacity</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% events.slice(0,5).forEach(event => { %>
+                        <tr>
+                            <td><%= event.title %></td>
+                            <td><span class="badge bg-secondary"><%= event.type %></span></td>
+                            <td><%= new Date(event.date).toDateString() %></td>
+                            <td><%= event.registered %>/<%= event.capacity %></td>
+                            <td>
+                                <span class="badge bg-<%= event.status === 'upcoming' ? 'primary' : event.status === 'ongoing' ? 'success' : 'secondary' %>">
+                                    <%= event.status %>
+                                </span>
+                            </td>
+                        </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Recent payments -->
+        <div class="card">
+            <div class="card-header"><strong>Recent Payments</strong></div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Payment ID</th>
+                            <th>Amount</th>
+                            <th>Method</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% payments.slice(0,5).forEach(payment => { %>
+                        <tr>
+                            <td><small><%= payment._id %></small></td>
+                            <td><%= payment.currency %> <%= payment.amount %></td>
+                            <td><span class="badge bg-info"><%= payment.method %></span></td>
+                            <td>
+                                <span class="badge bg-<%= payment.status === 'completed' ? 'success' : payment.status === 'pending' ? 'warning' : 'danger' %>">
+                                    <%= payment.status %>
+                                </span>
+                            </td>
+                            <td><%= new Date(payment.createdAt).toDateString() %></td>
+                        </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>   
+    
+</body>
+</html>

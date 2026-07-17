@@ -1,0 +1,60 @@
+<nav class="navbar navbar-expand-lg sticky-top shadow-sm"
+     style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);">
+    <div class="container">
+
+        <!-- Brand -->
+        <a class="navbar-brand fw-bold text-white" href="/">
+            🚴 <span style="color: #4fc3f7;">Bike</span>Club
+        </a>
+
+        <button class="navbar-toggler border-0" type="button"
+                data-bs-toggle="collapse" data-bs-target="#nav"
+                aria-controls="nav" aria-expanded="false"
+                style="filter: invert(1);">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="nav">
+
+            <!-- Left links -->
+            <ul class="navbar-nav me-auto gap-1">
+                <% if (typeof token !== 'undefined' && token) { %>
+                     <li class="nav-item">
+                    <a class="nav-link text-white-50" href="/profile">👤 Profile</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white-50" href="/dashboard">📊 Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white-50" href="/vouchers">🎟 Vouchers</a>
+                </li>
+                  <li class="nav-item">
+                    <a class="nav-link text-white-50" href="/">🗓 Events</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white-50" href="/members">👥 Members</a>
+                </li>
+                <% } %>
+            </ul>
+
+            <!-- Right links -->
+            <ul class="navbar-nav align-items-center gap-2">
+                <% if (typeof token !== 'undefined' && token) { %>
+                <li class="nav-item">
+                    <a class="nav-link text-danger" href="/logout">Logout</a>
+                </li>
+                <% } else { %>
+                <li class="nav-item">
+                    <a class="nav-link text-white-50" href="/login">Login</a>
+                </li>
+                <li class="nav-item">
+                    <a class="btn btn-sm fw-semibold px-3"
+                       style="background:#4fc3f7; color:#1a1a2e;"
+                       href="/register">Join Club</a>
+                </li>
+                <% } %>
+            </ul>
+
+        </div>
+    </div>
+</nav>
