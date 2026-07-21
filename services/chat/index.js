@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
 const connectDB = require('../../shared/db');
 const { redis } = require('../../shared/cache');
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
-
+const Message = require('./models/Chat');
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -82,13 +82,49 @@ async function saveMessage(roomId, message) {
     await redis.lpush(key, JSON.stringify(message));
     await redis.ltrim(key, 0, 99);  // keep last 100 messages
     await redis.expire(key, 86400); // expire after 24 hours
+    try {
+        await Message.create({
+            roomId,
+            roomType: message.roomType,
+            type: message.type,
+            content: message.content,
+            sender: message.sender,
+            eventId: roomId.replace('event_', '') // extract eventId from roomId
+        });
+    } catch (err) {
+        console.error('MongoDB message save failed:', err.message);
+    }
 }
 
 // ── Get message history ───────────────────────────────────
 async function getMessages(roomId) {
     const key = `chat:${roomId}:messages`;
-    const messages = await redis.lrange(key, 0, -1);
-    return messages.map(m => JSON.parse(m)).reverse(); // oldest first
+
+    // Try Redis first — fast
+    const cached = await redis.lrange(key, 0, -1);
+
+    if (cached.length > 0) {
+        return cached.map(m => JSON.parse(m)).reverse();
+    }
+
+    // Fall back to MongoDB — for history older than 24hrs
+    try {
+        const messages = await Message.find({ roomId })
+            .sort({ createdAt: 1 })
+            .limit(100);
+
+        return messages.map(m => ({
+            id: m._id,
+            content: m.content,
+            type: m.type,
+            roomType: m.roomType,
+            sender: m.sender,
+            timestamp: m.createdAt
+        }));
+    } catch (err) {
+        console.error('MongoDB message fetch failed:', err.message);
+        return [];
+    }
 }
 
 // ── Socket connection ─────────────────────────────────────
@@ -235,6 +271,26 @@ app.get('/chat/:roomId/messages', async (req, res) => {
         res.json({ roomId: req.params.roomId, messages });
     } catch (err) {
         res.status(500).json({ error: 'Failed to get messages' });
+    }
+});
+// Get full message history from MongoDB
+app.get('/chat/:roomId/history', async (req, res) => {
+    try {
+        const { page = 1, limit = 50 } = req.query;
+        const skip = (page - 1) * limit;
+
+        const messages = await Message.find({ roomId: req.params.roomId })
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(Number(limit));
+
+        res.json({
+            roomId: req.params.roomId,
+            messages: messages.reverse(),
+            page: Number(page)
+        });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to get history' });
     }
 });
 

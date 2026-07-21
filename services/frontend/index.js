@@ -28,7 +28,9 @@ const SERVICES = {
     members:  process.env.MEMBER_SERVICE_URL,
     events:   process.env.EVENT_SERVICE_URL,
     vouchers: process.env.VOUCHER_SERVICE_URL,
-    payments: process.env.PAYMENT_SERVICE_URL
+    payments: process.env.PAYMENT_SERVICE_URL,
+    chat:       process.env.CHAT_SERVICE_URL,   
+    newsletter: process.env.NEWSLETTER_SERVICE_URL
 };
  
 const app = express();
@@ -593,7 +595,7 @@ app.post('/api/newsletter/subscribe', async (req, res) => {
     const { email, name } = req.body;
 
     const { data, error } = await callService(
-        'http://localhost:4009/newsletter/subscribe',
+         `${SERVICES.newsletter}/newsletter/subscribe`,
         null, 'post', { email, name }
     );
 
@@ -604,7 +606,7 @@ app.post('/api/newsletter/subscribe', async (req, res) => {
 // ── Newsletter unsubscribe page ────────────────────────────
 app.get('/newsletter/unsubscribe/:token', async (req, res) => {
     const { data, error } = await callService(
-        `http://localhost:4009/newsletter/unsubscribe/${req.params.token}`,
+        `${SERVICES.newsletter}/newsletter/unsubscribe/${req.params.token}`,
         null, 'get'
     );
 
@@ -625,7 +627,55 @@ app.post('/contact', async (req, res) => {
     res.redirect('/contact?success=Thanks! We\'ll get back to you soon.');
 });
 
+// ── Chat page ─────────────────────────────────────────────
+app.get('/events/:id/chat', async (req, res) => {
+    const token = getToken(req);
+    if (!token) return res.redirect('/login');
 
+    const { data, error } = await callService(
+         `${SERVICES.events}/events/${req.params.id}`,
+        token
+    );
+
+    if (error) return res.redirect('/');
+
+    res.render('chat', {
+        token,
+        event: data.event,
+        eventId: req.params.id,
+        chatServiceUrl: process.env.CHAT_SERVICE_URL || 'http://localhost:4006'
+    });
+});
+
+// ── Get chat history ──────────────────────────────────────
+app.get('/api/chat/:roomId/messages', async (req, res) => {
+    const token = getToken(req);
+
+    try {
+        const { data } = await axios.get(
+             `${SERVICES.chat}/chat/${req.params.roomId}/messages`,
+            { headers: { authorization: `Bearer ${token}` } }
+        );
+        res.json(data);
+    } catch (err) {
+        res.json({ messages: [] });
+    }
+});
+
+// ── Get online users in room ──────────────────────────────
+app.get('/api/chat/:roomId/users', async (req, res) => {
+    const token = getToken(req);
+
+    try {
+        const { data } = await axios.get(
+            `${SERVICES.chat}/chat/${req.params.roomId}/users`,
+            { headers: { authorization: `Bearer ${token}` } }
+        );
+        res.json(data);
+    } catch (err) {
+        res.json({ users: [], count: 0 });
+    }
+});
 // ── Health ────────────────────────────────────────────────
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', service: 'frontend', port: PORT });

@@ -279,6 +279,12 @@
                                        style="background:#1a1a2e; color:white;">
                                         View Event →
                                     </a>
+                                     <% if (event.hasLiveChat || event.hasCommentary || event.type === 'webinar') { %>
+            <a href="/events/<%= event._id %>/chat"
+               class="btn btn-outline-primary btn-sm">
+                💬
+            </a>
+            <% } %>
                                 </div>
                             </div>
                             <% }) %>

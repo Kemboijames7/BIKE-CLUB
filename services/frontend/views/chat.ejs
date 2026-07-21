@@ -4,64 +4,240 @@
     <meta charset="UTF-8">
     <title>Live Chat — <%= event.title %></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        #messages {
-            height: 400px;
-            overflow-y: auto;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 16px;
-        }
-        .message { margin-bottom: 12px; }
-        .message .sender { font-weight: bold; font-size: 0.85rem; color: #2563eb; }
-        .message .time { font-size: 0.75rem; color: #94a3b8; margin-left: 8px; }
-        .message .content { margin-top: 2px; }
-        .message.admin .sender { color: #16a34a; }
-        .typing { font-size: 0.8rem; color: #94a3b8; min-height: 20px; }
-    </style>
+    <link rel="stylesheet" href="/css/style.css">
+ <style>
+    /* ── Chat container ──────────────────────────────── */
+    #messages {
+        height: 450px;
+        overflow-y: auto;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        scroll-behavior: smooth;
+    }
+
+    /* ── Message bubble ──────────────────────────────── */
+    .message {
+        display: flex;
+        flex-direction: column;
+        max-width: 75%;
+        word-wrap: break-word;
+        word-break: break-word;
+    }
+
+    /* Own messages on right */
+    .message.own {
+        align-self: flex-end;
+        align-items: flex-end;
+    }
+
+    /* Others on left */
+    .message.other {
+        align-self: flex-start;
+        align-items: flex-start;
+    }
+
+    /* Admin messages centered */
+    .message.admin-msg {
+        align-self: center;
+        align-items: center;
+        max-width: 90%;
+    }
+
+    .message .bubble {
+        padding: 8px 12px;
+        border-radius: 16px;
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+
+    .message.own .bubble {
+        background: #2563eb;
+        color: white;
+        border-bottom-right-radius: 4px;
+    }
+
+    .message.other .bubble {
+        background: white;
+        color: #1e293b;
+        border: 1px solid #e2e8f0;
+        border-bottom-left-radius: 4px;
+    }
+
+    .message.admin-msg .bubble {
+        background: #d1fae5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+        border-radius: 12px;
+    }
+
+    .message .meta {
+        font-size: 0.72rem;
+        color: #94a3b8;
+        margin-top: 2px;
+        padding: 0 4px;
+    }
+
+    .message.own .meta { text-align: right; }
+
+    /* ── Sender name ─────────────────────────────────── */
+    .message .sender-name {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #2563eb;
+        margin-bottom: 2px;
+        padding: 0 4px;
+    }
+
+    .message.admin-msg .sender-name { color: #065f46; }
+
+    /* ── System messages ─────────────────────────────── */
+    .system-msg {
+        text-align: center;
+        color: #94a3b8;
+        font-size: 0.75rem;
+        padding: 4px 12px;
+        background: #f1f5f9;
+        border-radius: 20px;
+        align-self: center;
+        margin: 2px 0;
+    }
+
+    /* ── Typing indicator ────────────────────────────── */
+    .typing {
+        font-size: 0.78rem;
+        color: #94a3b8;
+        min-height: 18px;
+        padding: 2px 8px;
+        font-style: italic;
+    }
+
+    /* ── Input area ──────────────────────────────────── */
+    #msgInput {
+        border-radius: 24px;
+        padding: 10px 18px;
+        border: 1px solid #e2e8f0;
+        font-size: 0.9rem;
+    }
+
+    #msgInput:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        outline: none;
+    }
+
+    .send-btn {
+        border-radius: 24px;
+        padding: 10px 20px;
+    }
+
+    /* ── Question/Answer badges ──────────────────────── */
+    .badge-question {
+        background: #fef3c7;
+        color: #92400e;
+        font-size: 0.7rem;
+        padding: 2px 8px;
+        border-radius: 10px;
+        margin-right: 4px;
+    }
+
+    .badge-answer {
+        background: #d1fae5;
+        color: #065f46;
+        font-size: 0.7rem;
+        padding: 2px 8px;
+        border-radius: 10px;
+        margin-right: 4px;
+    }
+
+    /* ── Scrollbar ───────────────────────────────────── */
+    #messages::-webkit-scrollbar { width: 4px; }
+    #messages::-webkit-scrollbar-track { background: transparent; }
+    #messages::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+    }
+</style>
 </head>
 <body class="d-flex flex-column min-vh-100">
     <%- include('partials/nav') %>
     <main class="flex-grow-1">
 
-    <div class="container mt-4">
+    <div class="container mt-4 mb-5">
         <div class="row">
             <div class="col-md-8 mx-auto">
+
+                <!-- Header -->
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
-                        <h4><%= event.title %></h4>
-                        <span class="badge bg-success" id="status">Connecting...</span>
-                        <span class="badge bg-secondary ms-1" id="online">0 online</span>
+                        <h4 class="mb-0"><%= event.title %></h4>
+                        <div class="mt-1">
+                            <span class="badge bg-success" id="status">
+                                Connecting...
+                            </span>
+                            <span class="badge bg-secondary ms-1" id="onlineCount">
+                                0 online
+                            </span>
+                            <span class="badge bg-info ms-1">
+                                <%= event.type === 'webinar' ? 'Webinar Q&A' : event.hasCommentary ? 'Commentary' : 'Live Chat' %>
+                            </span>
+                        </div>
                     </div>
-                    <a href="/events/<%= eventId %>" class="btn btn-outline-secondary btn-sm">
+                    <a href="/events/<%= eventId %>"
+                       class="btn btn-outline-secondary btn-sm">
                         ← Back to Event
                     </a>
                 </div>
 
+                <!-- Messages -->
                 <div id="messages"></div>
                 <div class="typing mt-1" id="typing"></div>
 
+                <!-- Input -->
                 <div class="input-group mt-3">
                     <input type="text" id="msgInput" class="form-control"
-                           placeholder="Type a message..." autocomplete="off">
-                    <button class="btn btn-primary" onclick="sendMessage()">Send</button>
+                           placeholder="<%= event.type === 'webinar' ? 'Ask a question...' : 'Type a message...' %>"
+                           autocomplete="off">
+                    <button class="btn btn-primary" onclick="sendMessage()">
+                        Send
+                    </button>
                 </div>
+
+                <% if (event.hasCommentary) { %>
+                <div class="alert alert-info small mt-2 mb-0">
+                    🎙️ This is a commentary room — only admins can broadcast messages.
+                </div>
+                <% } else if (event.type === 'webinar') { %>
+                <div class="alert alert-info small mt-2 mb-0">
+                    💬 Ask questions below. Admins will answer them live.
+                </div>
+                <% } %>
+
             </div>
         </div>
     </div>
-</main>
+
+    </main>
+    <%- include('partials/footer') %>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
     <script>
-        const TOKEN = '<%= token %>';
+        const TOKEN   = '<%= token %>';
         const ROOM_ID = 'event_<%= eventId %>';
         const ROOM_TYPE = '<%= event.hasCommentary ? "commentary" : event.type === "webinar" ? "webinar" : "live" %>';
 
+        // Connect to chat service directly
         const socket = io('http://localhost:4006', {
             auth: { token: TOKEN },
             transports: ['websocket', 'polling']
         });
 
+        // ── Connection events ─────────────────────────────
         socket.on('connect', () => {
             document.getElementById('status').textContent = '● Live';
             document.getElementById('status').className = 'badge bg-success';
@@ -73,7 +249,16 @@
             document.getElementById('status').className = 'badge bg-danger';
         });
 
+        socket.on('connect_error', (err) => {
+            console.error('Connection error:', err.message);
+            document.getElementById('status').textContent = '● Error';
+            document.getElementById('status').className = 'badge bg-danger';
+        });
+
+        // ── Room events ───────────────────────────────────
         socket.on('message_history', (messages) => {
+            const div = document.getElementById('messages');
+            div.innerHTML = '';
             messages.forEach(addMessage);
             scrollToBottom();
         });
@@ -84,21 +269,37 @@
         });
 
         socket.on('user_joined', (data) => {
-            document.getElementById('online').textContent = `${data.onlineCount} online`;
+            document.getElementById('onlineCount').textContent =
+                `${data.onlineCount} online`;
             addSystem(`${data.user.email} joined`);
         });
 
         socket.on('user_left', (data) => {
-            document.getElementById('online').textContent = `${data.onlineCount} online`;
+            document.getElementById('onlineCount').textContent =
+                `${data.onlineCount} online`;
             addSystem(`${data.email} left`);
         });
 
+        socket.on('online_users', (users) => {
+            document.getElementById('onlineCount').textContent =
+                `${users.length} online`;
+        });
+
         socket.on('user_typing', (data) => {
-            document.getElementById('typing').textContent = `${data.email} is typing...`;
+            document.getElementById('typing').textContent =
+                `${data.email} is typing...`;
         });
 
         socket.on('user_stop_typing', () => {
             document.getElementById('typing').textContent = '';
+        });
+
+        socket.on('message_pinned', (msg) => {
+            addSystem(`📌 Pinned: "${msg.content}"`);
+        });
+
+        socket.on('user_kicked', (data) => {
+            addSystem(`A user was removed from the room`);
         });
 
         socket.on('kicked', (data) => {
@@ -106,21 +307,40 @@
             window.location.href = '/';
         });
 
+        socket.on('error', (err) => {
+            console.error('Socket error:', err.message);
+        });
+const MY_EMAIL = '<%= token ? JSON.parse(atob(token.split(".")[1])).email : "" %>';
+        // ── Helpers ───────────────────────────────────────
         function addMessage(msg) {
             const div = document.getElementById('messages');
+            const isOwn = msg.sender.email === MY_EMAIL;
             const isAdmin = msg.sender.role === 'admin';
+
+             let cssClass = isAdmin ? 'admin-msg' : isOwn ? 'own' : 'other';
+
+            let typeBadge = '';
+            if (msg.type === 'question') {
+                typeBadge = '<span class="badge badge-question me-1">Q</span>';
+            } else if (msg.type === 'answer') {
+                typeBadge = '<span class="badge badge-answer me-1">A</span>';
+            }
+
+            // Don't show sender name for own messages
+    const senderName = isOwn ? '' :
+        `<div class="sender-name">${isAdmin ? '⭐ ' : ''}${msg.sender.email}</div>`;
+
             div.innerHTML += `
-                <div class="message ${isAdmin ? 'admin' : ''}">
-                    <span class="sender">${msg.sender.email}</span>
-                    <span class="time">${new Date(msg.timestamp).toLocaleTimeString()}</span>
-                    <div class="content">${msg.content}</div>
+                <div class="message ${cssClass}">
+            ${senderName}
+             <div class="bubble">${typeBadge}${msg.content}</div>
+            <span class="meta">${new Date(msg.timestamp).toLocaleTimeString()}</span>     
                 </div>`;
         }
 
         function addSystem(text) {
-            const div = document.getElementById('messages');
-            div.innerHTML += `
-                <div class="text-center text-muted small my-1">— ${text} —</div>`;
+            document.getElementById('messages').innerHTML +=
+                `<div class="system-msg">— ${text} —</div>`;
         }
 
         function scrollToBottom() {
@@ -128,6 +348,7 @@
             div.scrollTop = div.scrollHeight;
         }
 
+        // ── Typing indicator ──────────────────────────────
         let typingTimer;
         document.getElementById('msgInput').addEventListener('input', () => {
             socket.emit('typing', { roomId: ROOM_ID });
@@ -137,6 +358,7 @@
             }, 1000);
         });
 
+        // ── Send on Enter ─────────────────────────────────
         document.getElementById('msgInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage();
         });
@@ -147,8 +369,9 @@
             if (!content) return;
             socket.emit('send_message', { content, roomId: ROOM_ID });
             input.value = '';
+            socket.emit('stop_typing', { roomId: ROOM_ID });
         }
     </script>
-    <%- include('partials/footer') %>
 </body>
+ <%- include('partials/footer') %>
 </html>
