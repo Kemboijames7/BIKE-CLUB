@@ -2,8 +2,11 @@ const express = require('express');
 const path = require('path');
 const axios = require('axios');
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
+const connectDB = require('../../shared/db');
+const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
+const ContactMessage = require('../../shared/models/Message');
  
 // ── Validate required env vars on startup ─────────────────
 const REQUIRED_ENV = [
@@ -623,8 +626,21 @@ app.get('/contact', (req, res) => {
 
 app.post('/contact', async (req, res) => {
     const { name, email, subject, message } = req.body;
-    // e.g. enqueue a notification, save to DB, or email yourself
-    res.redirect('/contact?success=Thanks! We\'ll get back to you soon.');
+    
+    try {
+        await ContactMessage.create({
+            name,
+            email,
+            subject,
+            message,
+            type: 'contact',
+            read: false
+        });
+        res.redirect('/contact?success=Thanks! We\'ll get back to you soon.');
+    } catch (err) {
+        console.error('Contact form error:', err.message);
+        res.redirect('/contact?error=Failed to send message. Please try again.');
+    }
 });
 
 // ── Chat page ─────────────────────────────────────────────
@@ -676,13 +692,17 @@ app.get('/api/chat/:roomId/users', async (req, res) => {
         res.json({ users: [], count: 0 });
     }
 });
+
+
 // ── Health ────────────────────────────────────────────────
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', service: 'frontend', port: PORT });
 });
 
 // ── Start ─────────────────────────────────────────────────
-app.listen(PORT, () => {
-    console.log(`Frontend running on port ${PORT}`);
-    console.log(`Open: http://localhost:${PORT}`);
+connectDB().then(() => {
+    app.listen(PORT, () => {
+        console.log(`Frontend running on port ${PORT}`);
+        console.log(`Open: http://localhost:${PORT}`);
+    });
 });

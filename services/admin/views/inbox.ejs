@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Inbox — Bike Club Admin</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Source+Serif+Pro:400,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="fonts/icomoon/style.css">
+    <style>
+        body {
+            background: #f5f5f0;
+        }
+        .inbox-header {
+            background: linear-gradient(135deg, #2563eb 0%, #1b4332 100%);
+            color: white;
+            padding: 3rem 0;
+            margin-bottom: 2rem;
+        }
+        .inbox-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .badge-rule {
+            background: #e8f5e9;
+            color: #2563eb;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 0.5rem;
+        }
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .filter-bar .form-select,
+        .filter-bar .form-control {
+            max-width: 220px;
+        }
+        .stat-pill {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .message-row {
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 0.9rem;
+            transition: background 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+        .message-row:hover {
+            background: #f8f9fa;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .message-row.unread {
+            border-left: 4px solid #2563eb;
+            background: #f7faff;
+        }
+        .message-row .msg-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        .message-row .sender-name {
+            font-weight: 700;
+            color: #1b4332;
+        }
+        .message-row .sender-email {
+            font-size: 0.82rem;
+            color: #6c757d;
+        }
+        .message-row .msg-subject-badge {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            background: #e8f5e9;
+            color: #2563eb;
+            text-transform: capitalize;
+        }
+        .message-row .msg-date {
+            font-size: 0.78rem;
+            color: #adb5bd;
+            white-space: nowrap;
+        }
+        .message-preview {
+            color: #495057;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            margin-bottom: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+        }
+        .message-full {
+            display: none;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #e9ecef;
+            font-size: 0.92rem;
+            color: #343a40;
+            white-space: pre-wrap;
+        }
+        .message-row.expanded .message-preview {
+            display: none;
+        }
+        .message-row.expanded .message-full {
+            display: block;
+        }
+        .row-actions {
+            margin-top: 0.75rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+        .row-actions form {
+            display: inline;
+        }
+        .btn-mini {
+            font-size: 0.78rem;
+            padding: 0.3rem 0.75rem;
+            border-radius: 20px;
+            border: 1px solid #dee2e6;
+            background: white;
+            color: #495057;
+        }
+        .btn-mini:hover {
+            background: #f1f3f5;
+        }
+        .btn-mini.danger {
+            color: #c0392b;
+            border-color: #f1c9c2;
+        }
+        .btn-mini.danger:hover {
+            background: #fdf1ef;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #6c757d;
+        }
+        .empty-state .icon {
+            font-size: 2.5rem;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body class="d-flex flex-column min-vh-100">
+   
+    <main class="flex-grow-1">
+
+    <!-- Hero Header -->
+    <div class="inbox-header">
+        
+            <div class="d-flex justify-content-between mb-4">
+            <h3 class="display-6 fw-bold mb-2">📬 Inbox</h3>
+             <p class="lead mb-0 text-center">Messages from the contact form</p>
+             <a href="/admin/dashboard?token=<%= token %>" class="btn btn-outline-secondary">
+            ← Dashboard
+        </a>
+         
+        </div>
+          
+        </div>
+    </div>
+
+    <div class="container">
+
+        <% if (typeof success !== 'undefined' && success) { %>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            ✓ <%= success %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <% } %>
+
+        <div class="inbox-card">
+
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+                <div>
+                    <span class="badge-rule">📥 <%= messages.length %> total</span>
+                </div>
+                <% const unreadCount = messages.filter(m => !m.read).length; %>
+                <% if (unreadCount > 0) { %>
+                <span class="stat-pill">🌟 <%= unreadCount %> unread</span>
+                <% } %>
+            </div>
+
+            <div class="filter-bar">
+                <select id="subjectFilter" class="form-select form-select-sm">
+                    <option value="">All subjects</option>
+                    <option value="membership">Membership questions</option>
+                    <option value="rides">Upcoming rides / events</option>
+                    <option value="payments">Payments or vouchers</option>
+                    <option value="feedback">Feedback / suggestions</option>
+                    <option value="other">Something else</option>
+                </select>
+                <input type="text" id="searchBox" class="form-control form-control-sm" placeholder="Search name or email...">
+            </div>
+
+            <% if (messages.length === 0) { %>
+                <div class="empty-state">
+                    <span class="icon">🚲</span>
+                    <p class="mb-0">No messages yet. When someone writes in, it'll show up here.</p>
+                </div>
+            <% } else { %>
+                <div id="messageList">
+                    <% messages.forEach(function(msg) { %>
+                    <div class="message-row <%= !msg.read ? 'unread' : '' %>"
+                         data-subject="<%= msg.subject %>"
+                         data-search="<%= (msg.name + ' ' + msg.email).toLowerCase() %>"
+                         onclick="if (!event.target.closest('.row-actions')) this.classList.toggle('expanded')">
+                        <div class="msg-top">
+                            <div>
+                                <span class="sender-name"><%= msg.name %></span>
+                                <div class="sender-email"><%= msg.email %></div>
+                            </div>
+                            <div class="text-end">
+                                <span class="msg-subject-badge"><%= msg.subject %></span>
+                                <div class="msg-date">
+                                    <%= new Date(msg.createdAt).toLocaleDateString() %>
+                                    <%= new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p class="message-preview"><%= msg.message %></p>
+                        <div class="message-full"><%= msg.message %></div>
+
+                        <div class="row-actions">
+                            <a class="btn-mini" href="https://mail.google.com/mail/?view=cm&to=<%= msg.email %>&su=Re: <%= encodeURIComponent(msg.subject) %>" target="_blank">↩ Reply</a>
+                            <% if (!msg.read) { %>
+                            <form method="POST" action="/admin/messages/<%= msg._id %>/read">
+                                <button type="submit" class="btn-mini">✅ Mark Read</button>
+                            </form>
+                            <% } %>
+                            <form method="POST" action="/admin/messages/<%= msg._id %>/delete"
+                                  onsubmit="return confirm('Delete this message?');">
+                                <button type="submit" class="btn-mini danger">🗑️ Delete</button>
+                            </form>
+                        </div>
+                    </div>
+                    <% }); %>
+                </div>
+            <% } %>
+
+        </div>
+
+    </div>
+
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+
+    <script>
+        const subjectFilter = document.getElementById('subjectFilter');
+        const searchBox = document.getElementById('searchBox');
+        const rows = document.querySelectorAll('.message-row');
+
+        function applyFilters() {
+            const subject = subjectFilter ? subjectFilter.value : '';
+            const search = searchBox ? searchBox.value.toLowerCase().trim() : '';
+            rows.forEach(row => {
+                const matchesSubject = !subject || row.dataset.subject === subject;
+                const matchesSearch = !search || row.dataset.search.includes(search);
+                row.style.display = (matchesSubject && matchesSearch) ? '' : 'none';
+            });
+        }
+
+        if (subjectFilter) subjectFilter.addEventListener('change', applyFilters);
+        if (searchBox) searchBox.addEventListener('input', applyFilters);
+    </script>
+</body>
+</html>

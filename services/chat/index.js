@@ -294,6 +294,8 @@ app.get('/chat/:roomId/history', async (req, res) => {
     }
 });
 
+
+
 // ── Health check ──────────────────────────────────────────
 app.get('/health', (req, res) => {
     res.json({

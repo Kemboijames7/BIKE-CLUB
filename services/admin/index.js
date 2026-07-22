@@ -6,7 +6,7 @@ const cookieParser = require('cookie-parser');
 const connectDB = require('../../shared/db');
 const { redis } = require('../../shared/cache');
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
-
+const ContactMessage = require('../../shared/models/Message');
 // ── Validate required env vars on startup ─────────────────
 const REQUIRED_ENV = [
     'MONGO_URI',
@@ -34,7 +34,9 @@ const SERVICES = {
     vouchers:      process.env.VOUCHER_SERVICE_URL,
     payments:      process.env.PAYMENT_SERVICE_URL,
     chat:          process.env.CHAT_SERVICE_URL,
-    notifications: process.env.NOTIFICATION_SERVICE_URL
+    notifications: process.env.NOTIFICATION_SERVICE_URL,
+    message:       process.env.MESSAGE_SERVICE_URL,
+    newsletter:    process.env.NEWSLETTER_SERVICE_URL
 };
 
 const app = express();
@@ -215,7 +217,7 @@ app.get('/admin/dashboard', adminAuth, async (req, res) => {
                 }
             }
         };
-
+const unreadMessages = await ContactMessage.countDocuments({ read: false });
         res.render('dashboard', {
             user:     req.user,
             token,
@@ -223,7 +225,8 @@ app.get('/admin/dashboard', adminAuth, async (req, res) => {
             members:  membersData?.members   || [],
             events:   eventsData?.events     || [],
             vouchers: vouchersData?.vouchers || [],
-            payments: paymentsData?.payments || []
+            payments: paymentsData?.payments || [],
+            unreadMessages
         });
 
     } catch (err) {
@@ -368,6 +371,52 @@ app.post('/admin/newsletter/send', adminAuth, async (req, res) => {
     } catch (err) {
         res.status(500).json({ error: 'Failed to send campaign' });
     }
+});
+
+
+
+// ── Inbox — all messages ──────────────────────────────────
+app.get('/admin/inbox', adminAuth, async (req, res) => {
+    try {
+        const messages = await ContactMessage.find().sort({ createdAt: -1 });
+        console.log('Inbox messages count:', messages.length); // ← add
+        res.render('inbox', {
+            user: req.user,
+            token: req.token,
+            messages,
+            success: req.query.success || null
+        });
+    } catch (err) {
+        console.error('Inbox error:', err.message); // ← already there
+        res.status(500).send('Inbox failed');
+    }
+});
+
+app.post('/admin/messages/:id/read', adminAuth, async (req, res) => {
+    try {
+        await ContactMessage.findByIdAndUpdate(req.params.id, { $set: { read: true } });
+    } catch (err) {
+        console.error('Mark read error:', err.message);
+    }
+    res.redirect('/admin/inbox');
+});
+
+app.post('/admin/messages/:id/delete', adminAuth, async (req, res) => {
+    try {
+        await ContactMessage.findByIdAndDelete(req.params.id);
+    } catch (err) {
+        console.error('Delete message error:', err.message);
+    }
+    res.redirect('/admin/inbox');
+});
+
+app.post('/admin/messages/read-all', adminAuth, async (req, res) => {
+    try {
+        await ContactMessage.updateMany({ read: false }, { $set: { read: true } });
+    } catch (err) {
+        console.error('Mark all read error:', err.message);
+    }
+    res.redirect('/admin/inbox?success=All messages marked as read');
 });
 
 // ── Health ────────────────────────────────────────────────
