@@ -2,8 +2,35 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Events — Bike Club Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+    /* Prevent status and actions from wrapping */
+    table th:nth-child(7),
+    table td:nth-child(7),
+    table th:nth-child(8),
+    table td:nth-child(8) {
+        white-space: nowrap;
+        width: 1%;  /* shrink to content */
+    }
+
+    /* Let title and description columns absorb the squeeze */
+    table th:nth-child(1),
+    table td:nth-child(1) {
+        min-width: 150px;
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* Make table scroll horizontally on small screens instead of breaking */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+</style>
 </head>
 <body>
 <div class="container-fluid p-4">
@@ -21,6 +48,9 @@
 
     <div class="card">
         <div class="card-body p-0">
+            <div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive"> 
             <table class="table table-hover mb-0">
                 <thead class="table-light">
                     <tr>
@@ -49,6 +79,7 @@
                             </span>
                         </td>
                         <td>
+                           
                             <% if (event.status !== 'cancelled') { %>
                             <form method="POST" action="/admin/events/<%= event._id %>/cancel?token=<%= token %>" style="display:inline">
                                 <button class="btn btn-sm btn-danger"
@@ -62,6 +93,9 @@
                     <% }) %>
                 </tbody>
             </table>
+            </div>                           
+    </div>
+</div>
         </div>
     </div>
 </div>

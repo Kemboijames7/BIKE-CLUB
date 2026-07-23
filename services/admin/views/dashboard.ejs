@@ -123,6 +123,7 @@
                             <th>Date</th>
                             <th>Capacity</th>
                             <th>Status</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -137,6 +138,12 @@
                                     <%= event.status %>
                                 </span>
                             </td>
+                                <td style="white-space:nowrap">                                          
+        <a href="/admin/events/<%= event._id %>/attendees"
+           class="btn btn-sm btn-outline-primary">
+            👥 Attendees
+        </a>
+    </td>
                         </tr>
                         <% }) %>
                     </tbody>

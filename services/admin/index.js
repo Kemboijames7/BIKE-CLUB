@@ -419,6 +419,31 @@ app.post('/admin/messages/read-all', adminAuth, async (req, res) => {
     res.redirect('/admin/inbox?success=All messages marked as read');
 });
 
+app.get('/admin/events/:id/attendees', adminAuth, async (req, res) => {
+    try {
+        const [eventData, paymentsData] = await Promise.all([
+            callService(`${SERVICES.events}/events/${req.params.id}`, req.token),
+            callService(`${SERVICES.payments}/payments?eventId=${req.params.id}`, req.token)
+        ]);
+
+        const attendees = paymentsData?.payments?.filter(p => p.status === 'completed') || [];
+
+        res.render('attendees', {
+            user:      req.user,
+            token:     req.token,
+            event:     eventData?.event || {},
+            attendees,
+            total:     attendees.length,
+            revenue:   attendees.reduce((sum, p) => sum + p.amount, 0)
+        });
+    } catch (err) {
+        console.error('Attendees error:', err.message);
+        res.status(500).send('Attendees page failed');
+    }
+});
+
+
+
 // ── Health ────────────────────────────────────────────────
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', service: 'admin', port: PORT });

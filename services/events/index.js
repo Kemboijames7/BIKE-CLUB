@@ -15,6 +15,8 @@ const PORT = process.env.EVENT_PORT || 4003;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true}));
 
+// if (search) query.title = { $regex: search, $options: 'i' };
+
 //Helper
 function getUser(req) {
     return {

@@ -7,7 +7,6 @@ const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const ContactMessage = require('../../shared/models/Message');
- 
 // ── Validate required env vars on startup ─────────────────
 const REQUIRED_ENV = [
     'JWT_SECRET',
