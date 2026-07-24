@@ -40,10 +40,10 @@ const PORT = process.env.FRONTEND_PORT || 3001;
  
 app.use(cookieParser());
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.set('views', path.join(__dirname, 'views')); 
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
  
 
 async function callService(url, token, method = 'get', body = null) {
@@ -572,6 +572,52 @@ app.get('/members', async (req, res) => {
         members: data.members,
         error: error || null
     });
+});
+
+
+// ── Single member profile page ────────────────────────────
+app.get('/members/:id', async (req, res) => {
+    const token = getToken(req);
+
+    const { data, error } = await callService(
+        `${SERVICES.members}/members/${req.params.id}`,
+        token
+    );
+
+    if (error) return res.redirect('/members');
+
+      const { data: voucherData } = await callService(
+        `${SERVICES.vouchers}/vouchers?memberId=${req.params.id}`,
+        token
+    );
+
+    res.render('member-profile', {
+        token,
+        member: data.member,
+        activities: voucherData?.vouchers || []
+    });
+});
+
+// ── Get single member by id ───────────────────────────────
+app.get('/members/:id', async (req, res) => {
+    try {
+        const cached = await getCache(`member:${req.params.id}`);
+        if (cached) return res.json({ member: cached });
+
+        const member = await Member.findById(req.params.id)
+            .populate('userId', 'name email role');
+
+        if (!member) {
+            return res.status(404).json({ error: 'Member not found' });
+        }
+
+        await setCache(`member:${req.params.id}`, member, 3600);
+        res.json({ member });
+
+    } catch (err) {
+        console.error('Get member error:', err.message);
+        res.status(500).json({ error: 'Failed to get member' });
+    }
 });
 
 // ── Terms of Use ──────────────────────────────────────────

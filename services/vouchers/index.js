@@ -393,20 +393,21 @@ app.get('/vouchers', async (req, res) => {
         return res.status(403).json({ error: `Admin access required` });
     }
 
-    const { eventId, status, page = 1, limit = 20 } = req.query;
+    const { eventId, status, memberId, page = 1, limit = 20 } = req.query;
 
     try {
         const query = {};
         if (eventId) query.eventId = eventId;
         if (status) query.status = status;
+        if (memberId) query.memberId = memberId; 
 
         const skip = (page - 1) * limit;
         const total = await Voucher.countDocuments(query);
         const vouchers = await Voucher.find(query)
             .sort({ createdAt: -1 })
             .skip(skip)
-            .limit(Number(limit));
-
+            .limit(Number(limit))
+            .populate('eventId', 'title date location type status');
             res.json({
                 vouchers,
                 pagination: {

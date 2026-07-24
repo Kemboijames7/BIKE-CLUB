@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title><%= member.name || 'Cyclist' %> — Bike Club</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .profile-hero {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 4rem 0 6rem;
+            color: white;
+        }
+        .profile-card {
+            margin-top: -4rem;
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+        }
+        .avatar-large {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid white;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+        }
+        .avatar-placeholder-large {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: white;
+            border: 4px solid white;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+        }
+        .stat-box {
+            text-align: center;
+            padding: 1rem;
+            border-radius: 12px;
+            background: #f8fafc;
+        }
+        .stat-box .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2563eb;
+        }
+        .stat-box .stat-label {
+            font-size: 0.72rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .bike-badge-lg {
+            font-size: 0.85rem;
+            padding: 6px 16px;
+            border-radius: 24px;
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            display: inline-block;
+        }
+        .info-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.9rem;
+        }
+        .info-row:last-child { border-bottom: none; }
+        .info-icon { font-size: 1.1rem; width: 24px; text-align: center; }
+        .status-pill {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .activity-card {
+            border: none;
+            border-radius: 12px;
+            border-left: 4px solid #2563eb;
+            background: #f8fafc;
+            transition: transform 0.15s;
+        }
+        .activity-card:hover {
+            transform: translateX(4px);
+        }
+        .activity-card.used     { border-left-color: #16a34a; }
+        .activity-card.active   { border-left-color: #2563eb; }
+        .activity-card.expired  { border-left-color: #f59e0b; }
+        .activity-card.revoked  { border-left-color: #dc2626; }
+        .event-type-icon {
+            font-size: 1.8rem;
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .nav-tabs .nav-link {
+            border-radius: 8px 8px 0 0;
+            font-weight: 500;
+        }
+        .nav-tabs .nav-link.active {
+            color: #2563eb;
+            border-bottom-color: white;
+        }
+    </style>
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <%- include('partials/nav') 
+    %>
+ <%
+    const name = member.userId?.name || 'Cyclist';
+    const email = member.userId?.email || '';
+    const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    const bikeIcons = { road: '🚴', mountain: '🏔️', hybrid: '🚲', bmx: '🛹', other: '🚵' };
+    const eventTypeIcons = { ride: '🚴', campaign: '📢', webinar: '💻', race: '🏁', social: '🎉' };
+    const bikeIcon = bikeIcons[member.bikeType] || '🚵';
+    const joinedDate = new Date(member.joinedAt).toLocaleDateString('en-KE', {
+        day: 'numeric', month: 'long', year: 'numeric'
+    });
+    const monthsActive = Math.max(1, Math.floor(
+        (new Date() - new Date(member.joinedAt)) / (1000 * 60 * 60 * 24 * 30)
+    ));
+    const totalRides = activities.length;
+    const completedRides = activities.filter(a => a.status === 'used').length;
+    %>
+
+    <!-- Hero -->
+    <div class="profile-hero">
+        <div class="container text-center">
+            <a href="/members" class="text-white-50 text-decoration-none small">
+                ← Back to Members
+            </a>
+        </div>
+    </div>
+
+    <main class="flex-grow-1">
+        <div class="container pb-5">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+
+                    <!-- Profile card -->
+                    <div class="card profile-card p-4 mb-4">
+
+                        <!-- Avatar + name + status -->
+                        <div class="text-center mb-4">
+                            <% if (member.avatar) { %>
+                            <img src="<%= member.avatar %>"
+                                 alt="<%= name %>"
+                                 class="avatar-large mb-3">
+                            <% } else { %>
+                            <div class="avatar-placeholder-large mx-auto mb-3">
+                                <%= initials %>
+                            </div>
+                            <% } %>
+
+                            <h3 class="fw-bold mb-1"><%= name %></h3>
+
+                            <% if (member.city) { %>
+                            <p class="text-muted mb-2">📍 <%= member.city %></p>
+                            <% } %>
+
+                            <span class="status-pill text-white bg-<%=
+                                member.membershipStatus === 'active' ? 'success' :
+                                member.membershipStatus === 'suspended' ? 'warning' : 'danger'
+                            %>">
+                                <%= member.membershipStatus %>
+                            </span>
+                        </div>
+
+                        <!-- Bio -->
+                        <% if (member.bio && member.bio.trim()) { %>
+                        <div class="bg-light rounded-3 p-3 mb-4 text-center">
+                            <p class="fst-italic text-muted mb-0">
+                                "<%= member.bio.trim() %>"
+                            </p>
+                        </div>
+                        <% } %>
+
+                        <!-- Stats -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-3">
+                                <div class="stat-box">
+                                    <div class="stat-number"><%= monthsActive %></div>
+                                    <div class="stat-label">Months</div>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="stat-box">
+                                    <div class="stat-number"><%= totalRides %></div>
+                                    <div class="stat-label">Events</div>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="stat-box">
+                                    <div class="stat-number"><%= completedRides %></div>
+                                    <div class="stat-label">Completed</div>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="stat-box">
+                                    <div class="stat-number"><%= bikeIcon %></div>
+                                    <div class="stat-label"><%= member.bikeType || 'other' %></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tabs -->
+                        <ul class="nav nav-tabs mb-4" id="profileTabs">
+                            <li class="nav-item">
+                                <button class="nav-link active"
+                                        data-bs-toggle="tab"
+                                        data-bs-target="#profileTab">
+                                    👤 Profile
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link"
+                                        data-bs-toggle="tab"
+                                        data-bs-target="#activitiesTab">
+                                    🚴 Activities
+                                    <span class="badge bg-primary ms-1"><%= totalRides %></span>
+                                </button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content">
+
+                            <!-- Profile tab -->
+                            <div class="tab-pane fade show active" id="profileTab">
+                                <% if (email) { %>
+                                <div class="info-row">
+                                    <span class="info-icon">✉️</span>
+                                    <span class="text-muted">Email</span>
+                                    <span class="ms-auto"><%= email %></span>
+                                </div>
+                                <% } %>
+
+                                <% if (member.phone) { %>
+                                <div class="info-row">
+                                    <span class="info-icon">📞</span>
+                                    <span class="text-muted">Phone</span>
+                                    <span class="ms-auto"><%= member.phone %></span>
+                                </div>
+                                <% } %>
+
+                                <% if (member.city) { %>
+                                <div class="info-row">
+                                    <span class="info-icon">📍</span>
+                                    <span class="text-muted">City</span>
+                                    <span class="ms-auto"><%= member.city %></span>
+                                </div>
+                                <% } %>
+
+                                <div class="info-row">
+                                    <span class="info-icon">🚲</span>
+                                    <span class="text-muted">Bike Type</span>
+                                    <span class="ms-auto">
+                                        <span class="bike-badge-lg">
+                                            <%= bikeIcon %> <%= member.bikeType || 'other' %>
+                                        </span>
+                                    </span>
+                                </div>
+
+                                <div class="info-row">
+                                    <span class="info-icon">📅</span>
+                                    <span class="text-muted">Member Since</span>
+                                    <span class="ms-auto"><%= joinedDate %></span>
+                                </div>
+                            </div>
+
+                            <!-- Activities tab -->
+                            <div class="tab-pane fade" id="activitiesTab">
+
+                                <% if (activities.length === 0) { %>
+                                <div class="text-center text-muted py-4">
+                                    <div class="fs-1">🚴</div>
+                                    <h6>No activities yet</h6>
+                                    <p class="small">This member hasn't joined any events yet.</p>
+                                    <a href="/" class="btn btn-primary btn-sm">Browse Events</a>
+                                </div>
+                                <% } %>
+
+                                <div class="d-flex flex-column gap-3">
+                                <% activities.forEach(activity => {
+                                    const event = activity.eventId;
+                                    const eventIcon = eventTypeIcons[event?.type] || '🗓️';
+                                    const eventDate = event?.date
+                                        ? new Date(event.date).toLocaleDateString('en-KE', {
+                                            day: 'numeric', month: 'short', year: 'numeric'
+                                          })
+                                        : 'Date unknown';
+                                %>
+                                <div class="activity-card <%= activity.status %> p-3">
+                                    <div class="d-flex gap-3 align-items-start">
+
+                                        <!-- Event type icon -->
+                                        <div class="event-type-icon">
+                                            <%= eventIcon %>
+                                        </div>
+
+                                        <!-- Event details -->
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="fw-bold mb-1">
+                                                        <%= event?.title || 'Event' %>
+                                                    </h6>
+                                                    <div class="text-muted small">
+                                                        <% if (event?.location) { %>
+                                                        📍 <%= event.location %>
+                                                        <% } %>
+                                                    </div>
+                                                    <div class="text-muted small">
+                                                        📅 <%= eventDate %>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Status badge -->
+                                                <span class="badge bg-<%=
+                                                    activity.status === 'used'    ? 'success' :
+                                                    activity.status === 'active'  ? 'primary' :
+                                                    activity.status === 'expired' ? 'warning' : 'danger'
+                                                %> ms-2">
+                                                    <%=
+                                                        activity.status === 'used'    ? '✅ Attended' :
+                                                        activity.status === 'active'  ? '🎟️ Registered' :
+                                                        activity.status === 'expired' ? '⏰ Expired' : '❌ Revoked'
+                                                    %>
+                                                </span>
+                                            </div>
+
+                                            <!-- Voucher code + amount -->
+                                            <div class="d-flex gap-3 mt-2">
+                                                <span class="text-muted small">
+                                                    🎟️ <code><%= activity.code %></code>
+                                                </span>
+                                                <span class="text-muted small">
+                                                    💰 <%= activity.currency %>
+                                                    <%= activity.amount === 0 ? 'FREE' : activity.amount %>
+                                                </span>
+                                                <% if (event?.type) { %>
+                                                <span class="text-muted small">
+                                                    🏷️ <%= event.type %>
+                                                </span>
+                                                <% } %>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <% }) %>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="d-flex gap-2 mt-4 pt-3 border-top">
+                            <a href="/members"
+                               class="btn btn-outline-secondary flex-grow-1">
+                                ← All Members
+                            </a>
+                            <a href="/"
+                               class="btn btn-primary flex-grow-1">
+                                🗓️ View Events
+                            </a>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <%- include('partials/footer') %>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

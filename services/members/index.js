@@ -10,8 +10,8 @@ const express = require('express');
 const app = express();
 const PORT = process.env.MEMBER_PORT || 4002;
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // --Helper - get user from gateway header
 function getUser(req) {
@@ -78,7 +78,7 @@ app.put('/members/profile', async (req, res) => {
         return res.status(401).json({ error: 'Not authenticated' });
     }
 
-    const {phone, bio, city, bikeType, avatar } = req.body;
+    const { phone, bio, city, bikeType, avatar, name } = req.body;
 
     try {
         const member = await Member.findOneAndUpdate(
@@ -120,7 +120,9 @@ app.get('/members', async (req, res) => {
             return res.json({ members: cached });
         }
 
-        const members = await Member.find().sort({ joinedAt: -1 });
+        const members = await Member.find()
+        .populate('userId', 'name email role')
+        .sort({ joinedAt: -1 });
         await setCache('members:all', members, 300);
 
         res.json({ members });

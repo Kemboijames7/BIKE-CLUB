@@ -4,136 +4,256 @@
     <meta charset="UTF-8">
     <title>Members — Bike Club</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-     <link rel="stylesheet" href="/css/style.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css?family=Source+Serif+Pro:400,600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="fonts/icomoon/style.css">
+    <link rel="stylesheet" href="/css/style.css">
     <style>
-       
         .page-header {
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             color: white;
-            padding: 2rem 0 3rem;
-            margin-bottom: -2rem;
+            padding: 3rem 0;
+            margin-bottom: 2rem;
         }
-        .card { border: none; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); }
-        .member-card { transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; }
-        .member-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+        .member-card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            height: 100%;
+        }
+        .member-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.12);
+        }
         .avatar-circle {
-            width: 56px; height: 56px; border-radius: 50%;
-            background: linear-gradient(135deg, #1a1a2e, #4fc3f7);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.4rem; flex-shrink: 0;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: white;
+            flex-shrink: 0;
+            border: 3px solid #e2e8f0;
+        }
+        .avatar-img {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+            border: 3px solid #e2e8f0;
         }
         .bike-badge {
-            font-size: 0.7rem; padding: 0.3em 0.7em;
-            border-radius: 20px; background: #e3f2fd; color: #1565c0;
+            font-size: 0.72rem;
+            padding: 3px 10px;
+            border-radius: 20px;
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+        }
+        .bio-text {
+            font-size: 0.83rem;
+            color: #64748b;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .search-input {
+            border-radius: 24px;
+            padding: 10px 20px;
+            border: 1px solid #e2e8f0;
+            font-size: 0.9rem;
+        }
+        .search-input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+            outline: none;
+        }
+        .filter-btn.active {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .member-count-badge {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #4fc3f7;
         }
     </style>
 </head>
 <body class="d-flex flex-column min-vh-100">
     <%- include('partials/nav') %>
 
-    <!-- Page header -->
-    <div class="page-header">
+    <!-- Hero header -->
+    <div class="page-header text-center">
         <div class="container">
-            <h3 class="fw-bold mb-0">👥 Club Members</h3>
-            <p class="mb-0 mt-1" style="color: rgba(255,255,255,0.6);">
-                <%= members.length %> member<%= members.length !== 1 ? 's' : '' %> in the club
+            <div class="member-count-badge"><%= members.length %></div>
+            <h2 class="fw-bold">Club Members</h2>
+            <p style="color:rgba(255,255,255,0.6)">
+                Riders from across Nairobi — road cyclists, mountain bikers and everything in between
             </p>
         </div>
     </div>
 
     <main class="flex-grow-1">
-        <div class="container py-4" style="max-width: 900px;">
+        <div class="container pb-5">
 
-            <!-- Alerts -->
-            <% if (typeof success !== 'undefined' && success) { %>
-            <div class="alert alert-success alert-dismissible fade show">
-                ✓ <%= success %>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            <% } %>
-            <% if (typeof error !== 'undefined' && error) { %>
-            <div class="alert alert-danger alert-dismissible fade show">
-                ✗ <%= error %>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            <% } %>
-
-            <% if (members.length === 0) { %>
-                <div class="text-center text-muted py-5">
-                    <div class="fs-1 mb-2">👥</div>
-                    <p>No members found</p>
-                </div>
-            <% } else { %>
-            <div class="row g-3">
-                <% members.forEach(member => { %>
+            <!-- Search + filter -->
+            <div class="row mb-4 g-3 align-items-center">
                 <div class="col-md-6">
-                    <div class="card member-card">
-                        <div class="card-body p-3">
-                            <div class="d-flex align-items-center gap-3">
+                    <input type="text"
+                           id="memberSearch"
+                           class="form-control search-input"
+                           placeholder="🔍 Search by name, city or bike type...">
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button class="btn btn-sm btn-outline-secondary filter-btn active"
+                                data-filter="all">All</button>
+                        <button class="btn btn-sm btn-outline-secondary filter-btn"
+                                data-filter="road">🚴 Road</button>
+                        <button class="btn btn-sm btn-outline-secondary filter-btn"
+                                data-filter="mountain">🏔️ Mountain</button>
+                        <button class="btn btn-sm btn-outline-secondary filter-btn"
+                                data-filter="hybrid">🚲 Hybrid</button>
+                        <button class="btn btn-sm btn-outline-secondary filter-btn"
+                                data-filter="bmx">🛹 BMX</button>
+                        <button class="btn btn-sm btn-outline-secondary filter-btn"
+                                data-filter="other">🚵 Other</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visible count -->
+            <p class="text-muted small mb-4">
+                Showing <span id="visibleCount"><%= members.length %></span> members
+            </p>
+
+            <!-- Empty state -->
+            <% if (members.length === 0) { %>
+            <div class="text-center text-muted py-5">
+                <div class="display-1">🚴</div>
+                <h4>No members yet</h4>
+                <p>Be the first to join the club!</p>
+                <a href="/register" class="btn btn-primary">Join Now</a>
+            </div>
+            <% } %>
+
+            <!-- Members grid -->
+            <div class="row g-4" id="membersGrid">
+                <% members.forEach(member => {
+                    // Get name from populated userId or fallback
+                    const name = member.name || 'Cyclist'; 
+                     const email = member.email || ''; 
+
+                    // Generate initials for avatar placeholder
+                    const initials = name
+                        .split(' ')
+                        .map(w => w[0])
+                        .join('')
+                        .toUpperCase()
+                        .slice(0, 2);
+
+                    const bikeIcons = {
+                        road: '🚴',
+                        mountain: '🏔️',
+                        hybrid: '🚲',
+                        bmx: '🛹',
+                        other: '🚵'
+                    };
+                    const bikeIcon = bikeIcons[member.bikeType] || '🚵';
+                %>
+                <div class="col-md-6 col-lg-4 member-item"
+                     data-bike="<%= member.bikeType || 'other' %>"
+                     data-search="<%= name.toLowerCase() %> <%= (member.city || '').toLowerCase() %> <%= (member.bikeType || '').toLowerCase() %>">
+
+                    <div class="card member-card"
+     onclick="window.location='/members/<%= member._id %>'">
+                        <div class="card-body p-4">
+
+                            <!-- Top row — avatar + name + status -->
+                            <div class="d-flex gap-3 align-items-start mb-3">
 
                                 <!-- Avatar -->
                                 <% if (member.avatar) { %>
-                                    <img src="<%= member.avatar %>"
-                                         width="56" height="56"
-                                         class="rounded-circle"
-                                         style="object-fit:cover; flex-shrink:0;">
+                                <img src="<%= member.avatar %>"
+                                     alt="<%= name %>"
+                                     class="avatar-img">
                                 <% } else { %>
-                                    <div class="avatar-circle">🚴</div>
+                                <div class="avatar-circle"><%= initials %></div>
                                 <% } %>
 
-                                <!-- Info -->
+                                <!-- Name + location + status -->
                                 <div class="flex-grow-1 min-width-0">
-                                    <div class="d-flex justify-content-between align-items-start">
-                                        <div>
-                                            <h6 class="fw-bold mb-0">
-                                                <%= member.name || 'Cyclist' %>
-                                            </h6>
-                                            <div class="text-muted small">
-                                                📍 <%= member.city || 'Location not set' %>
-                                            </div>
-                                        </div>
-                                        <span class="badge rounded-pill bg-<%= member.membershipStatus === 'active' ? 'success' : member.membershipStatus === 'suspended' ? 'warning' : 'danger' %>">
-                                            <%= member.membershipStatus %>
-                                        </span>
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <h6 class="fw-bold mb-0 text-truncate">
+                                            <%= name %>
+                                        </h6>
+                                        <span class="status-dot ms-2 bg-<%=
+                                            member.membershipStatus === 'active' ? 'success' :
+                                            member.membershipStatus === 'suspended' ? 'warning' : 'danger'
+                                        %>"></span>
                                     </div>
 
-                                    <div class="mt-2 d-flex align-items-center gap-2 flex-wrap">
-                                        <span class="bike-badge">
-                                            🚲 <%= member.bikeType || 'other' %>
-                                        </span>
-                                        <span class="text-muted small">
-                                            📅 Joined <%= new Date(member.joinedAt).toLocaleDateString() %>
-                                        </span>
+                                    <% if (member.city) { %>
+                                    <div class="text-muted small mb-1">
+                                        📍 <%= member.city %>
                                     </div>
+                                    <% } %>
+
+                                    <% if (email) { %>
+                                    <div class="text-muted small text-truncate">
+                                        ✉️ <%= email %>
+                                    </div>
+                                    <% } %>
                                 </div>
                             </div>
 
-                            <!-- Bio preview if exists -->
+                            <!-- Bio -->
                             <% if (member.bio && member.bio.trim()) { %>
-                            <p class="text-muted small fst-italic mt-2 mb-0 border-top pt-2">
-                                "<%= member.bio.trim().substring(0, 80) %><%= member.bio.trim().length > 80 ? '...' : '' %>"
-                            </p>
+                            <div class="border-top border-bottom py-2 my-2">
+                                <p class="bio-text mb-0 fst-italic">
+                                    "<%= member.bio.trim() %>"
+                                </p>
+                            </div>
+                            <% } else { %>
+                            <div class="border-top border-bottom py-2 my-2">
+                                <p class="bio-text mb-0 fst-italic text-muted">
+                                    "Just here to ride and explore Nairobi on two wheels 🚴"
+                                </p>
+                            </div>
                             <% } %>
 
-                            <!-- Admin actions if admin -->
-                            <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
-                            <div class="mt-2 border-top pt-2 d-flex gap-2">
-                                <% if (member.membershipStatus === 'active') { %>
-                                <form method="POST"
-                                      action="/admin/members/<%= member._id %>/suspend?token=<%= token %>"
-                                      style="display:inline">
-                                    <button class="btn btn-sm btn-warning">Suspend</button>
-                                </form>
-                                <% } else { %>
-                                <form method="POST"
-                                      action="/admin/members/<%= member._id %>/activate?token=<%= token %>"
-                                      style="display:inline">
-                                    <button class="btn btn-sm btn-success">Activate</button>
-                                </form>
-                                <% } %>
+                            <!-- Bottom row — bike type + joined -->
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <span class="bike-badge">
+                                    <%= bikeIcon %> <%= member.bikeType || 'other' %>
+                                </span>
+                                <small class="text-muted">
+                                    Joined <%=
+                                        new Date(member.joinedAt).toLocaleDateString('en-KE', {
+                                            month: 'short',
+                                            year: 'numeric'
+                                        })
+                                    %>
+                                </small>
+                            </div>
+
+                            <!-- Phone if exists -->
+                            <% if (member.phone) { %>
+                            <div class="text-muted small mt-2">
+                                📞 <%= member.phone %>
                             </div>
                             <% } %>
 
@@ -142,12 +262,61 @@
                 </div>
                 <% }) %>
             </div>
-            <% } %>
+
+            <!-- No search results -->
+            <div id="noResults" class="text-center py-5 text-muted d-none">
+                <div class="fs-1">🔍</div>
+                <h5>No members found</h5>
+                <p>Try a different name, city or bike type</p>
+            </div>
 
         </div>
     </main>
 
     <%- include('partials/footer') %>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        const items       = document.querySelectorAll('.member-item');
+        const searchInput = document.getElementById('memberSearch');
+        const filterBtns  = document.querySelectorAll('.filter-btn');
+        const noResults   = document.getElementById('noResults');
+        const countEl     = document.getElementById('visibleCount');
+
+        function updateCount() {
+            const visible = document.querySelectorAll('.member-item:not(.d-none)').length;
+            countEl.textContent = visible;
+            noResults.classList.toggle('d-none', visible > 0);
+        }
+
+        let currentFilter = 'all';
+        let currentSearch = '';
+
+        function applyFilters() {
+            items.forEach(item => {
+                const bikeMatch = currentFilter === 'all' ||
+                                  item.dataset.bike === currentFilter;
+                const searchMatch = item.dataset.search.includes(currentSearch);
+                item.classList.toggle('d-none', !bikeMatch || !searchMatch);
+            });
+            updateCount();
+        }
+
+        // Search
+        searchInput.addEventListener('input', e => {
+            currentSearch = e.target.value.toLowerCase().trim();
+            applyFilters();
+        });
+
+        // Filter buttons
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.filter;
+                applyFilters();
+            });
+        });
+    </script>
 </body>
 </html>

@@ -79,7 +79,29 @@
                         <hr>
                         <h6 class="mb-3">Edit Profile</h6>
 
-                        <form method="POST" action="/profile">
+                        <form method="POST" action="/profile" id="profileForm">
+    <!-- Avatar Upload -->
+    <div class="mb-4 text-center">
+        <div id="avatarPreview" class="mb-2">
+            <% if (member.avatar) { %>
+                <img id="previewImg" src="<%= member.avatar %>"
+                     class="rounded-circle"
+                     width="100" height="100"
+                     style="object-fit:cover; border: 3px solid #0d6efd;">
+            <% } else { %>
+                <div id="previewImg" class="display-1">🚴</div>
+            <% } %>
+        </div>
+        <label for="avatarInput" class="btn btn-sm btn-outline-secondary">
+            📷 Change Photo
+        </label>
+        <input type="file" id="avatarInput" accept="image/*"
+               class="d-none" onchange="previewAvatar(event)">
+        <input type="hidden" name="avatar" id="avatarBase64"
+               value="<%= member.avatar || '' %>">
+        <div class="text-muted small mt-1">JPG, PNG, GIF, WEBP — any format</div>
+    </div>
+
                             <div class="mb-3">
                                 <label class="form-label">Name</label>
                                 <input type="text" name="name" class="form-control"
@@ -128,5 +150,89 @@
 </main>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <%- include('partials/footer') %>
+<!-- Edit form -->
+<hr>
+<h6 class="mb-3">Edit Profile</h6>
+
+<form method="POST" action="/profile" id="profileForm">
+    <!-- Avatar Upload -->
+    <div class="mb-4 text-center">
+        <div id="avatarPreview" class="mb-2">
+            <% if (member.avatar) { %>
+                <img id="previewImg" src="<%= member.avatar %>"
+                     class="rounded-circle"
+                     width="100" height="100"
+                     style="object-fit:cover; border: 3px solid #0d6efd;">
+            <% } else { %>
+                <div id="previewImg" class="display-1">🚴</div>
+            <% } %>
+        </div>
+        <label for="avatarInput" class="btn btn-sm btn-outline-secondary">
+            📷 Change Photo
+        </label>
+        <input type="file" id="avatarInput" accept="image/*"
+               class="d-none" onchange="previewAvatar(event)">
+        <input type="hidden" name="avatar" id="avatarBase64"
+               value="<%= member.avatar || '' %>">
+        <div class="text-muted small mt-1">JPG, PNG, GIF, WEBP — any format</div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Phone</label>
+        <input type="text" name="phone" class="form-control"
+               value="<%= member.phone || '' %>">
+    </div>
+    <div class="mb-3">
+        <label class="form-label">City</label>
+        <input type="text" name="city" class="form-control"
+               value="<%= member.city || '' %>">
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Bike Type</label>
+        <select name="bikeType" class="form-select">
+            <% ['road', 'mountain', 'hybrid', 'bmx', 'other'].forEach(type => { %>
+            <option value="<%= type %>"
+                <%= member.bikeType === type ? 'selected' : '' %>>
+                <%= type.charAt(0).toUpperCase() + type.slice(1) %>
+            </option>
+            <% }) %>
+        </select>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Bio</label>
+        <textarea name="bio" class="form-control" rows="3"><%= member.bio ? member.bio.trim() : '' %></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary w-100">
+        Save Changes
+    </button>
+</form>
+
+<script>
+function previewAvatar(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Show loading state
+    const preview = document.getElementById('previewImg');
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const base64 = e.target.result;
+
+        // Update preview
+        const container = document.getElementById('avatarPreview');
+        container.innerHTML = `
+            <img id="previewImg" src="${base64}"
+                 class="rounded-circle"
+                 width="100" height="100"
+                 style="object-fit:cover; border: 3px solid #0d6efd;">
+        `;
+
+        // Set hidden field value
+        document.getElementById('avatarBase64').value = base64;
+    };
+    reader.readAsDataURL(file);
+}
+</script>
 </body>
 </html>
